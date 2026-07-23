@@ -2,6 +2,7 @@ import type { GhlStage } from "../ghl/pipelines";
 import type { GhlUser } from "../ghl/users";
 import type { SafeOpportunity } from "../ghl/opportunities";
 import { stageMappingByName, type FunnelBucket } from "./stageMapping";
+import { canonicalOwnerNameOverride, resolveCanonicalOwnerId } from "./ownerAliases";
 
 export interface FunnelCounts {
   total: number;
@@ -114,12 +115,14 @@ export function computeFunnel(
     teamBuckets[mapping.bucket]++;
     teamTotal++;
 
-    const ownerId = opp.assignedTo ?? "unassigned";
+    const ownerId = opp.assignedTo ? resolveCanonicalOwnerId(opp.assignedTo) : "unassigned";
     if (!repBuckets.has(ownerId)) {
       repBuckets.set(ownerId, { ...EMPTY_BUCKET_COUNTS });
       repNames.set(
         ownerId,
-        ownerId === "unassigned" ? "Unassigned" : (users.get(ownerId)?.name ?? ownerId),
+        ownerId === "unassigned"
+          ? "Unassigned"
+          : (canonicalOwnerNameOverride(ownerId) ?? users.get(ownerId)?.name ?? ownerId),
       );
       repTotals.set(ownerId, 0);
     }
