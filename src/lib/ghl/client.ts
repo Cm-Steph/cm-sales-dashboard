@@ -1,3 +1,5 @@
+import { requireEnv } from "../env";
+
 const GHL_BASE_URL = "https://services.leadconnectorhq.com";
 const GHL_API_VERSION = "2021-07-28";
 
@@ -9,14 +11,6 @@ export class GhlApiError extends Error {
   ) {
     super(`GHL API error ${status} on ${path}: ${body}`);
   }
-}
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required env var: ${name}`);
-  }
-  return value;
 }
 
 export function ghlLocationId(): string {
