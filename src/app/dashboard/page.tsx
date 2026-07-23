@@ -1,26 +1,66 @@
 import { Suspense } from "react";
-import { getSalesPipelineStages } from "@/lib/ghl/pipelines";
-import { getUsers } from "@/lib/ghl/users";
+import { getSalesPipelineStages, type GhlStage } from "@/lib/ghl/pipelines";
+import { getUsers, type GhlUser } from "@/lib/ghl/users";
 import { fetchAllSalesPipelineOpportunities, withinRange } from "@/lib/ghl/opportunities";
 import { computeFunnel } from "@/lib/funnel/computeFunnel";
 import { resolveDateRange } from "@/lib/dateRanges";
+import { getOrSetCache } from "@/lib/cache";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { FunnelSummaryCards } from "@/components/dashboard/FunnelSummaryCards";
 import { RepBreakdownTable } from "@/components/dashboard/RepBreakdownTable";
 import { UnmappedStagesBanner } from "@/components/dashboard/UnmappedStagesBanner";
 
+// Stages/users change rarely (only when the pipeline or team roster is
+// edited in GHL) so they get a longer TTL than the opportunity data itself.
+const REFERENCE_DATA_TTL_SECONDS = 60 * 60;
+const OPPORTUNITIES_TTL_SECONDS = 5 * 60;
+
+// getSalesPipelineStages/getUsers return Maps, which JSON-serialize to "{}"
+// in Redis — cache their entries as arrays and rebuild the Map on read.
+async function getCachedStages(bypass: boolean): Promise<Map<string, GhlStage>> {
+  const entries = await getOrSetCache(
+    "ghl:sales-pipeline-stages",
+    REFERENCE_DATA_TTL_SECONDS,
+    async () => Array.from((await getSalesPipelineStages()).entries()),
+    { bypass },
+  );
+  return new Map(entries);
+}
+
+async function getCachedUsers(bypass: boolean): Promise<Map<string, GhlUser>> {
+  const entries = await getOrSetCache(
+    "ghl:users",
+    REFERENCE_DATA_TTL_SECONDS,
+    async () => Array.from((await getUsers()).entries()),
+    { bypass },
+  );
+  return new Map(entries);
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ preset?: string; from?: string; to?: string; owner?: string }>;
+  searchParams: Promise<{
+    preset?: string;
+    from?: string;
+    to?: string;
+    owner?: string;
+    refresh?: string;
+  }>;
 }) {
   const params = await searchParams;
   const range = resolveDateRange(params);
+  const bypassCache = Boolean(params.refresh);
 
   const [stages, users, allOpportunities] = await Promise.all([
-    getSalesPipelineStages(),
-    getUsers(),
-    fetchAllSalesPipelineOpportunities(),
+    getCachedStages(bypassCache),
+    getCachedUsers(bypassCache),
+    getOrSetCache(
+      "ghl:sales-pipeline-opportunities",
+      OPPORTUNITIES_TTL_SECONDS,
+      fetchAllSalesPipelineOpportunities,
+      { bypass: bypassCache },
+    ),
   ]);
 
   const inRange = allOpportunities.filter((o) => withinRange(o, range.from, range.to));

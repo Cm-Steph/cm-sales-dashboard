@@ -21,6 +21,9 @@ export function DashboardFilters({ reps }: Props) {
 
   function updateParams(next: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
+    // Any filter change should read from cache again, not force-bypass —
+    // only the explicit Refresh button does that.
+    params.delete("refresh");
     for (const [key, value] of Object.entries(next)) {
       if (value === null || value === "") params.delete(key);
       else params.set(key, value);
@@ -85,7 +88,11 @@ export function DashboardFilters({ reps }: Props) {
 
       <button
         type="button"
-        onClick={() => router.refresh()}
+        onClick={() => {
+          const params = new URLSearchParams(searchParams.toString());
+          params.set("refresh", Date.now().toString());
+          router.push(`${pathname}?${params.toString()}`);
+        }}
         className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
       >
         Refresh
