@@ -1,41 +1,13 @@
 import { Suspense } from "react";
-import { getSalesPipelineStages, type GhlStage } from "@/lib/ghl/pipelines";
-import { getUsers, type GhlUser } from "@/lib/ghl/users";
-import { fetchAllSalesPipelineOpportunities, withinRange } from "@/lib/ghl/opportunities";
+import { getCachedStages, getCachedUsers, getCachedOpportunities } from "@/lib/dashboardData";
+import { withinRange } from "@/lib/ghl/opportunities";
 import { computeFunnel } from "@/lib/funnel/computeFunnel";
 import { resolveDateRange } from "@/lib/dateRanges";
-import { getOrSetCache } from "@/lib/cache";
+import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { FunnelSummaryCards } from "@/components/dashboard/FunnelSummaryCards";
 import { RepBreakdownTable } from "@/components/dashboard/RepBreakdownTable";
 import { UnmappedStagesBanner } from "@/components/dashboard/UnmappedStagesBanner";
-
-// Stages/users change rarely (only when the pipeline or team roster is
-// edited in GHL) so they get a longer TTL than the opportunity data itself.
-const REFERENCE_DATA_TTL_SECONDS = 60 * 60;
-const OPPORTUNITIES_TTL_SECONDS = 5 * 60;
-
-// getSalesPipelineStages/getUsers return Maps, which JSON-serialize to "{}"
-// in Redis — cache their entries as arrays and rebuild the Map on read.
-async function getCachedStages(bypass: boolean): Promise<Map<string, GhlStage>> {
-  const entries = await getOrSetCache(
-    "ghl:sales-pipeline-stages",
-    REFERENCE_DATA_TTL_SECONDS,
-    async () => Array.from((await getSalesPipelineStages()).entries()),
-    { bypass },
-  );
-  return new Map(entries);
-}
-
-async function getCachedUsers(bypass: boolean): Promise<Map<string, GhlUser>> {
-  const entries = await getOrSetCache(
-    "ghl:users",
-    REFERENCE_DATA_TTL_SECONDS,
-    async () => Array.from((await getUsers()).entries()),
-    { bypass },
-  );
-  return new Map(entries);
-}
 
 export default async function DashboardPage({
   searchParams,
@@ -55,12 +27,7 @@ export default async function DashboardPage({
   const [stages, users, allOpportunities] = await Promise.all([
     getCachedStages(bypassCache),
     getCachedUsers(bypassCache),
-    getOrSetCache(
-      "ghl:sales-pipeline-opportunities",
-      OPPORTUNITIES_TTL_SECONDS,
-      fetchAllSalesPipelineOpportunities,
-      { bypass: bypassCache },
-    ),
+    getCachedOpportunities(bypassCache),
   ]);
 
   const inRange = allOpportunities.filter((o) => withinRange(o, range.from, range.to));
@@ -82,6 +49,10 @@ export default async function DashboardPage({
           pipeline stage movement
         </p>
       </div>
+
+      <Suspense>
+        <DashboardNav />
+      </Suspense>
 
       <Suspense>
         <DashboardFilters reps={result.byRep.map((r) => ({ id: r.ownerId, name: r.ownerName }))} />

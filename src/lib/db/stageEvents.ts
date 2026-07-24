@@ -1,6 +1,6 @@
 import { db } from "./client";
 import { hashContactId } from "../privacy/hashContact";
-import type { StageEventInsert } from "./types";
+import type { StageEventInsert, StageEventRow } from "./types";
 
 export interface StageChangeInput {
   /** GHL exposes no execution/event-id merge field -- derived server-side if omitted. */
@@ -59,4 +59,21 @@ export async function recordStageChange(input: StageChangeInput): Promise<{ inse
     throw error;
   }
   return { inserted: true };
+}
+
+// Safety cap matching the same reasoning as lib/ghl/opportunities.ts's
+// MAX_PAGES -- fine while event volume is low; revisit (e.g. paginate, or
+// pre-aggregate in SQL) once this pipeline has been live long enough to
+// accumulate tens of thousands of events.
+const MAX_ROWS = 20_000;
+
+/** All recorded stage events, oldest first -- the full history needed to reconstruct past pipeline state. */
+export async function fetchAllStageEvents(): Promise<StageEventRow[]> {
+  const { data, error } = await db()
+    .from("stage_events")
+    .select("*")
+    .order("event_at", { ascending: true })
+    .limit(MAX_ROWS);
+  if (error) throw error;
+  return (data ?? []) as unknown as StageEventRow[];
 }
