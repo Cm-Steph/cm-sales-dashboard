@@ -46,4 +46,5 @@ next-env.d.ts
 
 # auto-installed reference docs for AI coding agents (Vercel integration add)
 .agents/
+.claude/skills/
 skills-lock.json

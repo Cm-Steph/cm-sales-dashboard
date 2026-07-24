@@ -3,29 +3,52 @@ import { hashContactId } from "../privacy/hashContact";
 import type { StageEventInsert } from "./types";
 
 export interface StageChangeInput {
-  eventId: string;
+  /** GHL exposes no execution/event-id merge field -- derived server-side if omitted. */
+  eventId?: string;
   contactId: string;
   ownerId?: string | null;
-  fromStageId?: string | null;
   toStageId: string;
-  product?: string | null;
-  occurredAt: string;
+  /** GHL exposes no reliable timestamp merge field -- defaults to receipt time if omitted. */
+  occurredAt?: string;
+}
+
+function deriveEventId(input: StageChangeInput): string {
+  // GHL doesn't give us a per-execution id, so build a deterministic one
+  // from what we do have. Minute-bucketed so retried webhook deliveries
+  // for the *same* move collide (get de-duped), while a genuine later
+  // move back to the same stage (a different minute) is treated as new.
+  const minuteBucket = Math.floor(Date.now() / 60_000);
+  return `${input.contactId}:${input.toStageId}:${minuteBucket}`;
 }
 
 /**
- * Records one pipeline stage move. Idempotent -- if `eventId` (GHL's event
- * id) has already been recorded, this is a silent no-op rather than an
- * error, since webhook deliveries can be retried by the sender.
+ * Records one pipeline stage move. Idempotent -- if the (derived or
+ * supplied) event id has already been recorded, this is a silent no-op
+ * rather than an error, since webhook deliveries can be retried.
+ *
+ * GHL's webhook payload only ever tells us the *current* stage, never the
+ * previous one -- so from_stage_id is derived here by looking up this
+ * contact's most recently recorded stage, not supplied by the caller.
  */
 export async function recordStageChange(input: StageChangeInput): Promise<{ inserted: boolean }> {
+  const contactRef = hashContactId(input.contactId);
+
+  const { data: previous, error: lookupError } = await db()
+    .from("stage_events")
+    .select("to_stage_id")
+    .eq("contact_ref", contactRef)
+    .order("event_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (lookupError) throw lookupError;
+
   const row: StageEventInsert = {
-    ghl_event_id: input.eventId,
-    contact_ref: hashContactId(input.contactId),
+    ghl_event_id: input.eventId ?? deriveEventId(input),
+    contact_ref: contactRef,
     owner_id: input.ownerId ?? null,
-    from_stage_id: input.fromStageId ?? null,
+    from_stage_id: (previous as { to_stage_id: string } | null)?.to_stage_id ?? null,
     to_stage_id: input.toStageId,
-    product: input.product ?? null,
-    event_at: input.occurredAt,
+    event_at: input.occurredAt ?? new Date().toISOString(),
   };
   // postgrest-js can't infer table row types without a codegen'd schema
   // (see lib/db/client.ts) -- `row` above is the real type check.

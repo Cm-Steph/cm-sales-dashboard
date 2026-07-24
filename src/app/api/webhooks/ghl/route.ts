@@ -6,33 +6,44 @@ import { recordStageChange } from "@/lib/db/stageEvents";
 import { recordTouchpoint } from "@/lib/db/touchpointEvents";
 
 // This is OUR contract, not GHL's -- the JSON body shape here is what we
-// template the GHL Workflow's "Webhook" action to send (see task: Configure
-// GHL Workflows). Keeping it self-defined means we don't have to guess at
-// an externally-imposed payload shape.
+// template the GHL Workflow's "Custom webhook" action to send.
+//
+// GHL's merge-field catalog (confirmed against the live account, 2026-07-24)
+// has no execution/event-id field and no reliable timestamp field outside
+// of contact/opportunity dates, so eventId and occurredAt are optional here
+// -- if omitted, the server derives them (see below) rather than requiring
+// GHL to supply something it doesn't have. toStageId is expected to hold a
+// stage *name* (e.g. "{{opportunity.stage_name}}"), matching how
+// stageMapping.ts and ownerAliases.ts already key off names rather than
+// GHL's opaque per-location stage ids.
 interface StageChangedPayload {
   type: "stage_changed";
-  eventId: string;
+  eventId?: string;
   contactId: string;
   ownerId?: string | null;
-  fromStageId?: string | null;
   toStageId: string;
-  product?: string | null;
-  occurredAt: string;
+  occurredAt?: string;
 }
 
 interface TouchpointPayload {
   type: "touchpoint";
-  eventId: string;
+  eventId?: string;
   contactId: string;
   eventType: string;
   source?: Record<string, unknown> | null;
-  occurredAt: string;
+  occurredAt?: string;
 }
 
 type WebhookPayload = StageChangedPayload | TouchpointPayload;
 
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.length > 0;
+}
+
+function isFilledString(v: unknown): v is string {
+  // GHL sends unresolved/empty merge fields as "" rather than omitting the
+  // key, so treat blank strings the same as missing.
+  return typeof v === "string" && v.trim().length > 0;
 }
 
 function validate(
@@ -43,23 +54,21 @@ function validate(
   }
   const b = body as Record<string, unknown>;
 
-  if (!isNonEmptyString(b.eventId)) return { ok: false, error: "Missing eventId" };
-  if (!isNonEmptyString(b.contactId)) return { ok: false, error: "Missing contactId" };
-  if (!isNonEmptyString(b.occurredAt)) return { ok: false, error: "Missing occurredAt" };
+  if (!isFilledString(b.contactId)) return { ok: false, error: "Missing contactId" };
+  const eventId = isFilledString(b.eventId) ? b.eventId : undefined;
+  const occurredAt = isFilledString(b.occurredAt) ? b.occurredAt : undefined;
 
   if (b.type === "stage_changed") {
-    if (!isNonEmptyString(b.toStageId)) return { ok: false, error: "Missing toStageId" };
+    if (!isFilledString(b.toStageId)) return { ok: false, error: "Missing toStageId" };
     return {
       ok: true,
       payload: {
         type: "stage_changed",
-        eventId: b.eventId,
+        eventId,
         contactId: b.contactId,
-        ownerId: typeof b.ownerId === "string" ? b.ownerId : null,
-        fromStageId: typeof b.fromStageId === "string" ? b.fromStageId : null,
+        ownerId: isFilledString(b.ownerId) ? b.ownerId : null,
         toStageId: b.toStageId,
-        product: typeof b.product === "string" ? b.product : null,
-        occurredAt: b.occurredAt,
+        occurredAt,
       },
     };
   }
@@ -70,14 +79,14 @@ function validate(
       ok: true,
       payload: {
         type: "touchpoint",
-        eventId: b.eventId,
+        eventId,
         contactId: b.contactId,
         eventType: b.eventType,
         source:
           typeof b.source === "object" && b.source !== null
             ? (b.source as Record<string, unknown>)
             : null,
-        occurredAt: b.occurredAt,
+        occurredAt,
       },
     };
   }
