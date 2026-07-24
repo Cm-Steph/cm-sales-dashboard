@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { computeSourceAttribution } from "./computeAttribution";
+import { computeSourceAttribution, computeLandingPageAttribution } from "./computeAttribution";
 import type { SafeOpportunity } from "../ghl/opportunities";
 import type { GhlStage } from "../ghl/pipelines";
 
@@ -57,4 +57,39 @@ test("falls back through session source / referrer / medium before Unknown", () 
 
   assert.ok(result.find((r) => r.source === "Social media"));
   assert.ok(result.find((r) => r.source === "Unknown"));
+});
+
+test("landing page attribution groups by URL path, dropping host and query string", () => {
+  const result = computeLandingPageAttribution(
+    [
+      opp({
+        pipelineStageId: "s-won",
+        firstTouchSource: {
+          url: "https://bookings.clinicmastery.com/how-to-come-off-the-tools-thank-you",
+        },
+      }),
+      opp({
+        firstTouchSource: {
+          url: "https://bookings.clinicmastery.com/how-to-come-off-the-tools-thank-you?utm_source=ig",
+        },
+      }),
+      opp({ firstTouchSource: { url: "https://bookings.clinicmastery.com/other-page" } }),
+      opp({ firstTouchSource: null }),
+    ],
+    stagesById,
+  );
+
+  const leadMagnet = result.find((r) => r.source === "/how-to-come-off-the-tools-thank-you");
+  assert.equal(leadMagnet?.total, 2, "same path with/without query string should group together");
+  assert.equal(leadMagnet?.won, 1);
+  assert.ok(result.find((r) => r.source === "/other-page"));
+  assert.ok(result.find((r) => r.source === "Unknown"));
+});
+
+test("landing page attribution falls back to the raw string if the URL fails to parse", () => {
+  const result = computeLandingPageAttribution(
+    [opp({ firstTouchSource: { url: "not-a-valid-url" } })],
+    stagesById,
+  );
+  assert.ok(result.find((r) => r.source === "not-a-valid-url"));
 });

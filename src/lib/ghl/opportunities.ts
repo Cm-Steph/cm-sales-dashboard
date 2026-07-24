@@ -10,6 +10,15 @@ export interface AttributionSource {
   utmSessionSource?: string;
   medium?: string;
   referrer?: string;
+  /**
+   * The landing/booking page URL, query string already stripped by GHL --
+   * this is what identifies the specific lead magnet/campaign page, not
+   * just the broad channel. Deliberately not using the query-string
+   * version (`pageUrl`) even though GHL also provides it, since UTM params
+   * are already broken out above and there's no reason to carry the raw
+   * query string (however unlikely) into stored/displayed data.
+   */
+  url?: string;
 }
 
 /**
@@ -81,6 +90,7 @@ function pickAttribution(raw?: RawAttribution): AttributionSource | undefined {
     utmSessionSource,
     medium,
     referrer,
+    url,
   } = raw;
   return {
     utmSource,
@@ -91,6 +101,7 @@ function pickAttribution(raw?: RawAttribution): AttributionSource | undefined {
     utmSessionSource,
     medium,
     referrer,
+    url,
   };
 }
 

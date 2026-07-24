@@ -5,7 +5,17 @@ function formatRate(rate: number | null): string {
   return rate === null ? "—" : `${(rate * 100).toFixed(1)}%`;
 }
 
-export function SourceBreakdownTable({ rows }: { rows: SourceBreakdown[] }) {
+interface Props {
+  rows: SourceBreakdown[];
+  columnLabel?: string;
+  columnInfo?: string;
+}
+
+export function SourceBreakdownTable({
+  rows,
+  columnLabel = "Source",
+  columnInfo = "The UTM source, session source, referrer, or medium GHL attributed the contact to — whichever is most specific.",
+}: Props) {
   if (rows.length === 0) {
     return <p className="text-sm text-zinc-500 dark:text-zinc-400">No opportunities in this range.</p>;
   }
@@ -17,8 +27,8 @@ export function SourceBreakdownTable({ rows }: { rows: SourceBreakdown[] }) {
           <tr>
             <th className="px-3 py-2 font-medium">
               <span className="inline-flex items-center">
-                Source
-                <InfoTooltip text="The UTM source, session source, referrer, or medium GHL attributed the contact to — whichever is most specific." />
+                {columnLabel}
+                <InfoTooltip text={columnInfo} />
               </span>
             </th>
             <th className="px-3 py-2 text-right font-medium">

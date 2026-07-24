@@ -1,7 +1,10 @@
 import { Suspense } from "react";
 import { getCachedStages, getCachedOpportunities } from "@/lib/dashboardData";
 import { withinRange } from "@/lib/ghl/opportunities";
-import { computeSourceAttribution } from "@/lib/attribution/computeAttribution";
+import {
+  computeSourceAttribution,
+  computeLandingPageAttribution,
+} from "@/lib/attribution/computeAttribution";
 import { resolveDateRange } from "@/lib/dateRanges";
 import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter";
 import { SourceBreakdownTable } from "@/components/dashboard/SourceBreakdownTable";
@@ -24,6 +27,7 @@ export default async function JourneyPage({
   const inRange = allOpportunities.filter((o) => withinRange(o, range.from, range.to));
   const firstTouch = computeSourceAttribution(inRange, stages, "first");
   const lastTouch = computeSourceAttribution(inRange, stages, "last");
+  const landingPages = computeLandingPageAttribution(inRange, stages);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
@@ -32,15 +36,27 @@ export default async function JourneyPage({
           Customer Journey
         </h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          Aggregate only — no individual customer is ever shown here, just which channels bring
-          bookings in and which ones convert. Built from GHL&apos;s built-in first/last-touch
-          attribution, not an individual-level path history.
+          Aggregate only — no individual customer is ever shown here, just which channels and
+          pages bring bookings in and which ones convert. Built from GHL&apos;s built-in
+          first/last-touch attribution, not an individual-level path history.
         </p>
       </div>
 
       <Suspense>
         <DateRangeFilter />
       </Suspense>
+
+      <div>
+        <h2 className="mb-2 flex items-center font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
+          By landing page — which specific offer or lead magnet drove the booking
+          <InfoTooltip text="The path of the page a contact first landed on before ever booking (e.g. a specific lead magnet or webinar page), not just the broad channel. Sourced from GHL's own first-touch tracking." />
+        </h2>
+        <SourceBreakdownTable
+          rows={landingPages}
+          columnLabel="Page"
+          columnInfo="The URL path of the first page GHL recorded for this contact — identifies the specific offer/lead magnet, not just the channel."
+        />
+      </div>
 
       <div>
         <h2 className="mb-2 flex items-center font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
