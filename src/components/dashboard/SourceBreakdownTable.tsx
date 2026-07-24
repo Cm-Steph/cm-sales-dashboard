@@ -24,19 +24,25 @@ export function SourceBreakdownTable({ rows }: { rows: SourceBreakdown[] }) {
             <th className="px-3 py-2 text-right font-medium">
               <span className="inline-flex items-center justify-end">
                 Bookings
-                <InfoTooltip text="Opportunities attributed to this source in the selected date range." />
+                <InfoTooltip
+                  text="Opportunities attributed to this source in the selected date range."
+                  align="end"
+                />
               </span>
             </th>
             <th className="px-3 py-2 text-right font-medium">
               <span className="inline-flex items-center justify-end">
                 Won
-                <InfoTooltip text="Of those bookings, how many are currently in a 'Closed - WON' stage." />
+                <InfoTooltip
+                  text="Of those bookings, how many are currently in a 'Closed - WON' stage."
+                  align="end"
+                />
               </span>
             </th>
             <th className="px-3 py-2 text-right font-medium">
               <span className="inline-flex items-center justify-end">
                 Win Rate
-                <InfoTooltip text="Won ÷ Bookings for this source." />
+                <InfoTooltip text="Won ÷ Bookings for this source." align="end" />
               </span>
             </th>
           </tr>

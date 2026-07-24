@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Force light mode everywhere -- the Clinic Mastery brand guide only ever
+   permits yellow or white backgrounds, so this dashboard shouldn't follow
+   the visitor's OS dark-mode preference. Switches Tailwind's `dark:` variant
+   from the default media-query strategy to a class-based one; since nothing
+   in the app ever applies a `.dark` class, `dark:` utilities simply never
+   activate. (Left in place rather than stripped from every component, in
+   case a manual theme toggle is wanted later.) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #1a1a1a;
@@ -26,13 +35,6 @@
   --color-brand-ink: var(--brand-ink);
   --font-heading: var(--font-lexend);
   --font-body: var(--font-work-sans);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

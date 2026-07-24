@@ -24,7 +24,7 @@ function Th({ label }: { label: string }) {
     <th className={th}>
       <span className="inline-flex items-center justify-end">
         {label}
-        <InfoTooltip text={COLUMN_INFO[label]} />
+        <InfoTooltip text={COLUMN_INFO[label]} align="end" />
       </span>
     </th>
   );
