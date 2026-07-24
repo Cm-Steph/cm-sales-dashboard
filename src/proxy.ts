@@ -16,5 +16,9 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/api/:path*"],
+  // /api/webhooks/* and /api/cron/* are called by GHL and Vercel Cron
+  // respectively, not by a logged-in browser -- they authenticate with
+  // their own secret headers (see route.ts files) instead of the session
+  // cookie, so they must NOT go through the password gate.
+  matcher: ["/dashboard/:path*", "/api/((?!webhooks|cron).*)"],
 };

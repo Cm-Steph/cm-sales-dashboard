@@ -1,18 +1,12 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { requireEnv } from "./env";
+import { timingSafeStringEqual } from "./security";
 
 export const SESSION_COOKIE_NAME = "cm_dashboard_session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
 function sign(value: string): string {
   return createHmac("sha256", requireEnv("SESSION_SECRET")).update(value).digest("hex");
-}
-
-function timingSafeStringEqual(a: string, b: string): boolean {
-  const aBuf = Buffer.from(a);
-  const bBuf = Buffer.from(b);
-  if (aBuf.length !== bBuf.length) return false;
-  return timingSafeEqual(aBuf, bBuf);
 }
 
 /**
