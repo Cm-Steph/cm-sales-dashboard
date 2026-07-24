@@ -98,6 +98,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
   }
 
+  // TEMPORARY: log the raw payload so we can see exactly what GHL's
+  // Workflow "Webhook" action actually sends (its "standard data" + our
+  // custom fields), instead of guessing. Remove once confirmed.
+  console.log("GHL webhook raw body:", JSON.stringify(body));
+
   const result = validate(body);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
