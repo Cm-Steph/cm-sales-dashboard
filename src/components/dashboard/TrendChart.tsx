@@ -12,12 +12,14 @@ import {
 } from "recharts";
 import type { DailyBucketSnapshot } from "@/lib/history/dailySnapshots";
 
+// Clinic Mastery brand palette (yellow reserved for the logo/primary brand
+// mark, so it's deliberately not used as a data-series colour here).
 const SERIES: { key: keyof DailyBucketSnapshot["counts"]; color: string; label: string }[] = [
-  { key: "InDeliberation", color: "#2563eb", label: "In Deliberation" },
-  { key: "Won", color: "#16a34a", label: "Won" },
-  { key: "Lost", color: "#dc2626", label: "Lost" },
-  { key: "NoShow", color: "#d97706", label: "No Show" },
-  { key: "Cancelled", color: "#9333ea", label: "Cancelled" },
+  { key: "InDeliberation", color: "#2e0a78", label: "In Deliberation" }, // eggplant
+  { key: "Won", color: "#ff8e21", label: "Won" }, // orange
+  { key: "Lost", color: "#ff707d", label: "Lost" }, // salmon
+  { key: "NoShow", color: "#24a3ff", label: "No Show" }, // blue
+  { key: "Cancelled", color: "#a1129e", label: "Cancelled" }, // violet
 ];
 
 export function TrendChart({ snapshots }: { snapshots: DailyBucketSnapshot[] }) {

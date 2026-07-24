@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const inputClasses =
-  "rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+  "rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand-violet dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 
 /**
  * Date range preset/custom picker + refresh button, shared by the Overview,
@@ -78,7 +78,7 @@ export function DateRangeFilter({ children }: { children?: React.ReactNode }) {
           params.set("refresh", Date.now().toString());
           router.push(`${pathname}?${params.toString()}`);
         }}
-        className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+        className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:border-brand-violet hover:text-brand-violet dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-brand-yellow dark:hover:text-brand-yellow"
       >
         Refresh
       </button>

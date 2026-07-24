@@ -3,7 +3,6 @@ import { getCachedStages, getCachedUsers, getCachedOpportunities } from "@/lib/d
 import { withinRange } from "@/lib/ghl/opportunities";
 import { computeFunnel } from "@/lib/funnel/computeFunnel";
 import { resolveDateRange } from "@/lib/dateRanges";
-import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { FunnelSummaryCards } from "@/components/dashboard/FunnelSummaryCards";
 import { RepBreakdownTable } from "@/components/dashboard/RepBreakdownTable";
@@ -41,7 +40,7 @@ export default async function DashboardPage({
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+        <h1 className="font-heading text-xl font-medium text-brand-eggplant dark:text-zinc-50">
           Sales Pipeline Dashboard
         </h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -49,10 +48,6 @@ export default async function DashboardPage({
           pipeline stage movement
         </p>
       </div>
-
-      <Suspense>
-        <DashboardNav />
-      </Suspense>
 
       <Suspense>
         <DashboardFilters reps={result.byRep.map((r) => ({ id: r.ownerId, name: r.ownerName }))} />
@@ -66,7 +61,9 @@ export default async function DashboardPage({
       />
 
       <div>
-        <h2 className="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">By rep</h2>
+        <h2 className="mb-2 font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
+          By rep
+        </h2>
         <RepBreakdownTable reps={selectedRep ? [selectedRep] : result.byRep} />
       </div>
     </div>

@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { getCachedStageEvents } from "@/lib/dashboardData";
 import { computeDailyBucketSnapshots } from "@/lib/history/dailySnapshots";
 import { resolveDateRange } from "@/lib/dateRanges";
-import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter";
 import { TrendChart } from "@/components/dashboard/TrendChart";
 
@@ -22,17 +21,15 @@ export default async function TrendPage({
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Pipeline Trend</h1>
+        <h1 className="font-heading text-xl font-medium text-brand-eggplant dark:text-zinc-50">
+          Pipeline Trend
+        </h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           Day-by-day pipeline state, reconstructed from logged stage-change history — only
           available from {new Date().toLocaleDateString()} onward (the day this tracking went
           live); it can&apos;t reach back further than that.
         </p>
       </div>
-
-      <Suspense>
-        <DashboardNav />
-      </Suspense>
 
       <Suspense>
         <DateRangeFilter />

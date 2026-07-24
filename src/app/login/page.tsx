@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { login } from "./actions";
 
 export default async function LoginPage({
@@ -14,8 +15,9 @@ export default async function LoginPage({
         action={login}
         className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
       >
-        <h1 className="mb-1 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          Clinic Mastery Sales Dashboard
+        <Image src="/brand/logo-main.png" alt="Clinic Mastery" width={160} height={32} className="mb-4" />
+        <h1 className="mb-1 font-heading text-lg font-medium text-brand-eggplant dark:text-zinc-50">
+          Sales Dashboard
         </h1>
         <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
           Enter the team password to continue.
@@ -27,14 +29,14 @@ export default async function LoginPage({
           placeholder="Password"
           autoFocus
           required
-          className="mb-3 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+          className="mb-3 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand-violet dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
         />
         {params.error && (
-          <p className="mb-3 text-sm text-red-600 dark:text-red-400">Incorrect password.</p>
+          <p className="mb-3 text-sm text-brand-salmon">Incorrect password.</p>
         )}
         <button
           type="submit"
-          className="w-full rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="w-full rounded-md bg-brand-eggplant px-3 py-2 text-sm font-medium text-white hover:bg-brand-violet"
         >
           Sign in
         </button>

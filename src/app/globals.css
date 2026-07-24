@@ -2,14 +2,30 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1a1a;
+
+  /* Clinic Mastery brand palette (CM - Brand Guide, "Colour palette" p.26) */
+  --brand-yellow: #f0d140;
+  --brand-orange: #ff8e21;
+  --brand-violet: #a1129e;
+  --brand-eggplant: #2e0a78;
+  --brand-blue: #24a3ff;
+  --brand-salmon: #ff707d;
+  --brand-ink: #1a1a1a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-violet: var(--brand-violet);
+  --color-brand-eggplant: var(--brand-eggplant);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-salmon: var(--brand-salmon);
+  --color-brand-ink: var(--brand-ink);
+  --font-heading: var(--font-lexend);
+  --font-body: var(--font-work-sans);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +38,4 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
