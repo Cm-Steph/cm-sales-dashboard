@@ -36,14 +36,15 @@ interface TouchpointPayload {
 
 type WebhookPayload = StageChangedPayload | TouchpointPayload;
 
-function isNonEmptyString(v: unknown): v is string {
-  return typeof v === "string" && v.length > 0;
-}
+const UNRESOLVED_MERGE_FIELD_VALUES = new Set(["null", "undefined"]);
 
 function isFilledString(v: unknown): v is string {
-  // GHL sends unresolved/empty merge fields as "" rather than omitting the
-  // key, so treat blank strings the same as missing.
-  return typeof v === "string" && v.trim().length > 0;
+  // Confirmed against a real webhook delivery: GHL sends unresolved merge
+  // fields as the literal text "null" (not an empty string, not an
+  // omitted key), so that has to be treated the same as missing.
+  if (typeof v !== "string") return false;
+  const trimmed = v.trim();
+  return trimmed.length > 0 && !UNRESOLVED_MERGE_FIELD_VALUES.has(trimmed.toLowerCase());
 }
 
 function validate(
@@ -74,7 +75,7 @@ function validate(
   }
 
   if (b.type === "touchpoint") {
-    if (!isNonEmptyString(b.eventType)) return { ok: false, error: "Missing eventType" };
+    if (!isFilledString(b.eventType)) return { ok: false, error: "Missing eventType" };
     return {
       ok: true,
       payload: {
