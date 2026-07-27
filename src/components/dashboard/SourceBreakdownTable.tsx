@@ -9,12 +9,15 @@ interface Props {
   rows: SourceBreakdown[];
   columnLabel?: string;
   columnInfo?: string;
+  /** Used in the Bookings/Won/Win Rate tooltip text -- "this source" vs "this page", etc. */
+  nounLabel?: string;
 }
 
 export function SourceBreakdownTable({
   rows,
   columnLabel = "Source",
   columnInfo = "The UTM source, session source, referrer, or medium GHL attributed the contact to — whichever is most specific.",
+  nounLabel = "source",
 }: Props) {
   if (rows.length === 0) {
     return <p className="text-sm text-zinc-500 dark:text-zinc-400">No opportunities in this range.</p>;
@@ -35,7 +38,7 @@ export function SourceBreakdownTable({
               <span className="inline-flex items-center justify-end">
                 Bookings
                 <InfoTooltip
-                  text="Opportunities attributed to this source in the selected date range."
+                  text={`Opportunities attributed to this ${nounLabel} in the selected date range.`}
                   align="end"
                 />
               </span>
@@ -52,7 +55,7 @@ export function SourceBreakdownTable({
             <th className="px-3 py-2 text-right font-medium">
               <span className="inline-flex items-center justify-end">
                 Win Rate
-                <InfoTooltip text="Won ÷ Bookings for this source." align="end" />
+                <InfoTooltip text={`Won ÷ Bookings for this ${nounLabel}.`} align="end" />
               </span>
             </th>
           </tr>

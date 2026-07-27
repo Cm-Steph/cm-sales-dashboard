@@ -55,6 +55,7 @@ export default async function JourneyPage({
           rows={landingPages}
           columnLabel="Page"
           columnInfo="The URL path of the first page GHL recorded for this contact — identifies the specific offer/lead magnet, not just the channel."
+          nounLabel="page"
         />
       </div>
 
