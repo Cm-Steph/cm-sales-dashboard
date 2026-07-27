@@ -59,6 +59,10 @@ test("buckets opportunities by mapped stage and computes rates", () => {
   assert.equal(result.totals.qualified, 4);
   assert.equal(result.totals.totalToWonRate, 1 / 6);
   assert.equal(result.totals.qualifiedToWonRate, 1 / 4);
+  assert.equal(result.totals.noShowRate, 1 / 6);
+  assert.equal(result.totals.cancelledRate, 1 / 6);
+  assert.equal(result.totals.inDeliberationRate, 1 / 6);
+  assert.equal(result.totals.lostRate, 1 / 6);
 });
 
 test("groups by rep, including an explicit unassigned bucket", () => {
@@ -98,5 +102,6 @@ test("handles an empty opportunity list without dividing by zero", () => {
   assert.equal(result.totals.total, 0);
   assert.equal(result.totals.totalToWonRate, null);
   assert.equal(result.totals.qualifiedToWonRate, null);
+  assert.equal(result.totals.noShowRate, null);
   assert.equal(result.byRep.length, 0);
 });

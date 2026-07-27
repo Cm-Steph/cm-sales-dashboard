@@ -2,6 +2,7 @@ import { getSalesPipelineStages, type GhlStage } from "./ghl/pipelines";
 import { getUsers, type GhlUser } from "./ghl/users";
 import { fetchAllSalesPipelineOpportunities, type SafeOpportunity } from "./ghl/opportunities";
 import { fetchAllFormSubmissions, type SafeFormSubmission } from "./ghl/formSubmissions";
+import { fetchAllStrategySessionAppointments, type SafeAppointment } from "./ghl/appointments";
 import { fetchAllStageEvents } from "./db/stageEvents";
 import { getOrSetCache } from "./cache";
 import type { StageEventRow } from "./db/types";
@@ -12,6 +13,7 @@ const REFERENCE_DATA_TTL_SECONDS = 60 * 60;
 const OPPORTUNITIES_TTL_SECONDS = 5 * 60;
 const STAGE_EVENTS_TTL_SECONDS = 5 * 60;
 const FORM_SUBMISSIONS_TTL_SECONDS = 5 * 60;
+const APPOINTMENTS_TTL_SECONDS = 5 * 60;
 
 // getSalesPipelineStages/getUsers return Maps, which JSON-serialize to "{}"
 // in Redis — cache their entries as arrays and rebuild the Map on read.
@@ -53,6 +55,15 @@ export async function getCachedFormSubmissions(bypass: boolean): Promise<SafeFor
     "ghl:form-submissions",
     FORM_SUBMISSIONS_TTL_SECONDS,
     fetchAllFormSubmissions,
+    { bypass },
+  );
+}
+
+export async function getCachedAppointments(bypass: boolean): Promise<SafeAppointment[]> {
+  return getOrSetCache(
+    "ghl:strategy-session-appointments",
+    APPOINTMENTS_TTL_SECONDS,
+    fetchAllStrategySessionAppointments,
     { bypass },
   );
 }

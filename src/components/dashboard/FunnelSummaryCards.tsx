@@ -125,3 +125,65 @@ export function FunnelSummaryCards({
     </div>
   );
 }
+
+export function ConversionRateCards({
+  counts,
+  comparison,
+  comparisonLabel,
+  title,
+}: {
+  counts: FunnelCounts;
+  comparison?: FunnelCounts;
+  comparisonLabel?: string;
+  title: string;
+}) {
+  return (
+    <div>
+      <h2 className="mb-2 font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
+        {title}
+        {comparison && comparisonLabel && (
+          <span className="ml-2 font-normal text-zinc-400">{comparisonLabel}</span>
+        )}
+      </h2>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <Card
+          label="No-Show Rate"
+          value={formatRate(counts.noShowRate)}
+          info="No Show ÷ Total for this date range. High values point to a booking or reminder problem — people scheduling a Strategy Session but never turning up."
+          delta={comparison && percentagePointChange(counts.noShowRate, comparison.noShowRate)}
+        />
+        <Card
+          label="Cancelled Rate"
+          value={formatRate(counts.cancelledRate)}
+          info="Cancelled ÷ Total for this date range."
+          delta={comparison && percentagePointChange(counts.cancelledRate, comparison.cancelledRate)}
+        />
+        <Card
+          label="In Deliberation Rate"
+          value={formatRate(counts.inDeliberationRate)}
+          info="In Deliberation ÷ Total for this date range. High values point to a follow-through problem — decisions are being made but not closed out either way."
+          delta={
+            comparison &&
+            percentagePointChange(counts.inDeliberationRate, comparison.inDeliberationRate)
+          }
+        />
+        <Card
+          label="Lost Rate"
+          value={formatRate(counts.lostRate)}
+          info="Lost ÷ Total for this date range."
+          delta={comparison && percentagePointChange(counts.lostRate, comparison.lostRate)}
+        />
+        <Card
+          label="Qualified → Won Rate"
+          value={formatRate(counts.qualifiedToWonRate)}
+          info="Won ÷ Qualified — conversion once someone has passed the initial No Show / Cancelled gate. Isolates closing performance from top-of-funnel volume, unlike the blunter Win Rate (Won ÷ Total)."
+          align="end"
+          delta={
+            comparison &&
+            percentagePointChange(counts.qualifiedToWonRate, comparison.qualifiedToWonRate)
+          }
+        />
+      </div>
+    </div>
+  );
+}

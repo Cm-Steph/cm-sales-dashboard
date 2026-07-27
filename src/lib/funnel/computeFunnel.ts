@@ -17,6 +17,14 @@ export interface FunnelCounts {
   totalToWonRate: number | null;
   /** Won / qualified — conversion once someone has passed initial screening. */
   qualifiedToWonRate: number | null;
+  /** No Show / total — drop-off rate at the initial appointment gate. */
+  noShowRate: number | null;
+  /** Cancelled / total — drop-off rate from cancellations. */
+  cancelledRate: number | null;
+  /** In Deliberation / total — the "stuck, not yet decided" rate. */
+  inDeliberationRate: number | null;
+  /** Lost / total — explicit loss rate. */
+  lostRate: number | null;
 }
 
 export interface RepFunnelMetrics {
@@ -65,6 +73,10 @@ export function emptyFunnelCounts(): FunnelCounts {
     nurture: 0,
     totalToWonRate: null,
     qualifiedToWonRate: null,
+    noShowRate: null,
+    cancelledRate: null,
+    inDeliberationRate: null,
+    lostRate: null,
   };
 }
 
@@ -92,6 +104,10 @@ function toFunnelCounts(buckets: Record<FunnelBucket, number>, total: number): F
     nurture: buckets.Nurture,
     totalToWonRate: rate(won, total),
     qualifiedToWonRate: rate(won, qualified),
+    noShowRate: rate(buckets.NoShow, total),
+    cancelledRate: rate(buckets.Cancelled, total),
+    inDeliberationRate: rate(buckets.InDeliberation, total),
+    lostRate: rate(buckets.Lost, total),
   };
 }
 

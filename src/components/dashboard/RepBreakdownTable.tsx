@@ -17,6 +17,11 @@ const COLUMN_INFO: Record<string, string> = {
   Won: "Currently in a 'Closed - WON' stage.",
   Lost: "Currently in 'Closed - Lost' or 'No Longer Interested'.",
   "Win Rate": "Won ÷ Total for this rep in the selected range.",
+  "No-Show Rate": "No Show ÷ Total for this rep.",
+  "Cancelled Rate": "Cancelled ÷ Total for this rep.",
+  "In Deliberation Rate": "In Deliberation ÷ Total for this rep.",
+  "Lost Rate": "Lost ÷ Total for this rep.",
+  "Qual. → Won Rate": "Won ÷ Qualified for this rep — isolates closing performance from booking volume.",
 };
 
 function Th({ label }: { label: string }) {
@@ -37,7 +42,7 @@ export function RepBreakdownTable({ reps }: { reps: RepFunnelMetrics[] }) {
 
   return (
     <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-      <table className="w-full min-w-[760px] text-sm">
+      <table className="w-full min-w-[1180px] text-sm">
         <thead className="bg-zinc-50 text-left font-heading text-xs uppercase tracking-wide text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
           <tr>
             <th className="px-3 py-2 font-medium">Rep</th>
@@ -49,6 +54,11 @@ export function RepBreakdownTable({ reps }: { reps: RepFunnelMetrics[] }) {
             <Th label="Won" />
             <Th label="Lost" />
             <Th label="Win Rate" />
+            <Th label="No-Show Rate" />
+            <Th label="Cancelled Rate" />
+            <Th label="In Deliberation Rate" />
+            <Th label="Lost Rate" />
+            <Th label="Qual. → Won Rate" />
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -65,6 +75,11 @@ export function RepBreakdownTable({ reps }: { reps: RepFunnelMetrics[] }) {
               <td className={td}>{rep.counts.won}</td>
               <td className={td}>{rep.counts.lost}</td>
               <td className={td}>{formatRate(rep.counts.totalToWonRate)}</td>
+              <td className={td}>{formatRate(rep.counts.noShowRate)}</td>
+              <td className={td}>{formatRate(rep.counts.cancelledRate)}</td>
+              <td className={td}>{formatRate(rep.counts.inDeliberationRate)}</td>
+              <td className={td}>{formatRate(rep.counts.lostRate)}</td>
+              <td className={td}>{formatRate(rep.counts.qualifiedToWonRate)}</td>
             </tr>
           ))}
         </tbody>
