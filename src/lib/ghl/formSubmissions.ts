@@ -30,6 +30,7 @@ interface RawSubmission {
   others?: {
     facebookFormId?: string;
     facebookFormName?: string;
+    productType?: string;
     eventData?: {
       source?: string;
       medium?: string;
@@ -89,6 +90,11 @@ async function fetchFormNameMap(): Promise<Map<string, string>> {
 function resolveFormName(raw: RawSubmission, formNameMap: Map<string, string>): string {
   const facebookFormName = raw.others?.facebookFormName;
   if (raw.others?.facebookFormId && facebookFormName) return facebookFormName;
+
+  // GHL's live chat widget submits as a synthetic `cwf-{locationId}` formId
+  // with no name, parentName, or forms-list entry anywhere -- the only
+  // signal it's the chat widget is `others.productType`.
+  if (raw.others?.productType === "chat-widget") return "Website Chat Widget";
 
   const parentName = raw.others?.eventData?.parentName;
   if (parentName) return parentName;

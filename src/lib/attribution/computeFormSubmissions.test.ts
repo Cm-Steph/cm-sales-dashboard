@@ -68,6 +68,24 @@ test("a form with zero conversions still reports a real 0, not null", () => {
   assert.equal(row.conversionRate, 0);
 });
 
+test("excludes member-servicing / internal-ops forms regardless of naming variant", () => {
+  const result = computeFormSubmissionAttribution(
+    [
+      submission({ formName: "Billing & Accounts Change/Update Request" }),
+      submission({ formName: "Form 2 | Mentor Mastery Enrolment " }),
+      submission({ formName: "Form 1 | Practice Leaders Program Enrolment" }),
+      submission({ formName: "Member Gift Request" }),
+      submission({ formName: "[INTERNAL] Membership Change/Update Request " }),
+      submission({ formName: "Membership Change/Update Request" }),
+      submission({ formName: "New | Systems Blueprint | 2025 | PDF File" }),
+    ],
+    [],
+    stagesById,
+  );
+  assert.equal(result.length, 1);
+  assert.equal(result[0].formName, "New | Systems Blueprint | 2025 | PDF File");
+});
+
 test("groups multiple submissions of the same form together", () => {
   const result = computeFormSubmissionAttribution(
     [

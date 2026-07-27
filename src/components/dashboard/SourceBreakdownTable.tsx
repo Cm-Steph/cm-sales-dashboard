@@ -31,7 +31,7 @@ export function SourceBreakdownTable({
             <th className="px-3 py-2 font-medium">
               <span className="inline-flex items-center">
                 {columnLabel}
-                <InfoTooltip text={columnInfo} />
+                <InfoTooltip text={columnInfo} placement="below" />
               </span>
             </th>
             <th className="px-3 py-2 text-right font-medium">
@@ -40,6 +40,7 @@ export function SourceBreakdownTable({
                 <InfoTooltip
                   text={`Opportunities attributed to this ${nounLabel} in the selected date range.`}
                   align="end"
+                  placement="below"
                 />
               </span>
             </th>
@@ -49,13 +50,14 @@ export function SourceBreakdownTable({
                 <InfoTooltip
                   text="Of those bookings, how many are currently in a 'Closed - WON' stage."
                   align="end"
+                  placement="below"
                 />
               </span>
             </th>
             <th className="px-3 py-2 text-right font-medium">
               <span className="inline-flex items-center justify-end">
                 Win Rate
-                <InfoTooltip text={`Won ÷ Bookings for this ${nounLabel}.`} align="end" />
+                <InfoTooltip text={`Won ÷ Bookings for this ${nounLabel}.`} align="end" placement="below" />
               </span>
             </th>
           </tr>

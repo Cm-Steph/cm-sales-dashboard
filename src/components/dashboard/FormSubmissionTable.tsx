@@ -22,7 +22,10 @@ export function FormSubmissionTable({ rows }: { rows: FormSubmissionBreakdown[] 
             <th className="px-3 py-2 font-medium">
               <span className="inline-flex items-center">
                 Form
-                <InfoTooltip text="The name of the GHL form submitted (e.g. a specific lead magnet or internal request form)." />
+                <InfoTooltip
+                  text="The name of the GHL form submitted (e.g. a specific lead magnet or internal request form)."
+                  placement="below"
+                />
               </span>
             </th>
             <th className="px-3 py-2 text-right font-medium">
@@ -31,6 +34,7 @@ export function FormSubmissionTable({ rows }: { rows: FormSubmissionBreakdown[] 
                 <InfoTooltip
                   text="How many times this form was submitted in the selected date range."
                   align="end"
+                  placement="below"
                 />
               </span>
             </th>
@@ -40,6 +44,7 @@ export function FormSubmissionTable({ rows }: { rows: FormSubmissionBreakdown[] 
                 <InfoTooltip
                   text="Of those submitters, how many have any opportunity at all in '03. Sales Pipeline' -- confirms this is a real lead-gen form, not just an internal/admin one."
                   align="end"
+                  placement="below"
                 />
               </span>
             </th>
@@ -49,13 +54,14 @@ export function FormSubmissionTable({ rows }: { rows: FormSubmissionBreakdown[] 
                 <InfoTooltip
                   text="Of those submitters, how many are currently in a 'Closed - WON' stage."
                   align="end"
+                  placement="below"
                 />
               </span>
             </th>
             <th className="px-3 py-2 text-right font-medium">
               <span className="inline-flex items-center justify-end">
                 Conversion Rate
-                <InfoTooltip text="Won ÷ Submissions for this form." align="end" />
+                <InfoTooltip text="Won ÷ Submissions for this form." align="end" placement="below" />
               </span>
             </th>
           </tr>

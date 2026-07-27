@@ -3,6 +3,25 @@ import type { SafeOpportunity } from "../ghl/opportunities";
 import type { SafeFormSubmission } from "../ghl/formSubmissions";
 import { stageMappingByName } from "../funnel/stageMapping";
 
+// Member-servicing / internal-ops forms (billing changes, program enrolment
+// paperwork, gift requests) get filled out by people who are already
+// members -- counting them here would make it look like "forms" are driving
+// new pipeline, when really it's existing customers doing admin. Matched by
+// substring (case-insensitive) since GHL's own names carry inconsistent
+// "[INTERNAL]" prefixes / trailing whitespace across near-duplicate forms.
+const EXCLUDED_FORM_NAME_SUBSTRINGS = [
+  "billing & accounts",
+  "mentor mastery enrolment",
+  "practice leaders program enrolment",
+  "member gift request",
+  "membership change/update request",
+];
+
+function isExcludedForm(formName: string): boolean {
+  const normalized = formName.toLowerCase();
+  return EXCLUDED_FORM_NAME_SUBSTRINGS.some((substring) => normalized.includes(substring));
+}
+
 export interface FormSubmissionBreakdown {
   formName: string;
   submissions: number;
@@ -39,6 +58,7 @@ export function computeFormSubmissionAttribution(
   const won = new Map<string, number>();
 
   for (const submission of submissions) {
+    if (isExcludedForm(submission.formName)) continue;
     const key = submission.formName;
     totals.set(key, (totals.get(key) ?? 0) + 1);
     if (contactRefsWithOpportunity.has(submission.contactRef)) {

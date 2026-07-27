@@ -11,13 +11,23 @@ interface Props {
    * right-aligned table columns), so the box never runs off-screen.
    */
   align?: "start" | "end";
+  /**
+   * Which side of the icon the tooltip box opens toward. "above" (default)
+   * works for standalone stat cards. Table headers must use "below" --
+   * a `<thead>` sits at the very top of its `overflow-x-auto` wrapper, and
+   * per the CSS spec that wrapper's overflow-y is silently forced to
+   * "auto" too (can't be overridden to "visible" while overflow-x isn't
+   * "visible"), so anything opening "above" there gets clipped and never
+   * renders on screen even though it's in the DOM.
+   */
+  placement?: "above" | "below";
 }
 
 // Click/tap-to-toggle rather than CSS hover -- hover (and even
 // focus-within on a non-native-focusable element) doesn't reliably fire
 // on tap across mobile browsers, which is why this was reported as
 // showing "no info" on a phone.
-export function InfoTooltip({ text, align = "start" }: Props) {
+export function InfoTooltip({ text, align = "start", placement = "above" }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLSpanElement>(null);
 
@@ -56,9 +66,9 @@ export function InfoTooltip({ text, align = "start" }: Props) {
       </button>
       {open && (
         <span
-          className={`absolute bottom-full z-20 mb-2 w-52 rounded-md bg-brand-ink px-2.5 py-1.5 text-left text-xs font-normal normal-case text-white shadow-lg ${
-            align === "end" ? "right-0" : "left-0"
-          }`}
+          className={`absolute z-20 w-52 rounded-md bg-brand-ink px-2.5 py-1.5 text-left text-xs font-normal normal-case text-white shadow-lg ${
+            placement === "below" ? "top-full mt-2" : "bottom-full mb-2"
+          } ${align === "end" ? "right-0" : "left-0"}`}
         >
           {text}
         </span>
