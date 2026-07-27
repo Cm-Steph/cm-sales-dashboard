@@ -1,4 +1,4 @@
-export type DateRangePreset = "last30" | "last90" | "lastYear" | "custom";
+export type DateRangePreset = "last7" | "last30" | "last90" | "lastYear" | "custom";
 
 export interface ResolvedDateRange {
   from: Date;
@@ -7,6 +7,7 @@ export interface ResolvedDateRange {
 }
 
 const PRESET_DAYS: Record<Exclude<DateRangePreset, "custom">, number> = {
+  last7: 7,
   last30: 30,
   last90: 90,
   lastYear: 365,
@@ -40,7 +41,9 @@ export function resolveDateRange(params: {
   }
 
   const preset: Exclude<DateRangePreset, "custom"> =
-    params.preset === "last90" || params.preset === "lastYear" ? params.preset : "last30";
+    params.preset === "last7" || params.preset === "last90" || params.preset === "lastYear"
+      ? params.preset
+      : "last30";
 
   const from = startOfDay(new Date(now.getTime() - PRESET_DAYS[preset] * 24 * 60 * 60 * 1000));
   return { from, to: endOfDay(now), preset };
@@ -53,7 +56,7 @@ export interface ComparisonRange {
 
 /**
  * The immediately preceding period of the same length as `range` -- the
- * standard "vs previous period" comparison (e.g. Last 30 days compares
+ * default "vs previous period" comparison (e.g. Last 30 days compares
  * against the 30 days before that, back to back with no gap).
  */
 export function resolveComparisonRange(range: ResolvedDateRange): ComparisonRange {
@@ -61,4 +64,26 @@ export function resolveComparisonRange(range: ResolvedDateRange): ComparisonRang
   const to = new Date(range.from.getTime() - 1);
   const from = new Date(to.getTime() - durationMs);
   return { from, to };
+}
+
+/**
+ * Resolves the comparison window from its own URL params, letting the user
+ * pick an independent comparison range (Last 7/30/90 days, Last year, or a
+ * custom range) rather than always being locked to "immediately preceding,
+ * same length as the main range". `comparePreset` of "previous" (the
+ * default once comparison is turned on) keeps that original auto behavior.
+ */
+export function resolveComparisonRangeFromParams(
+  range: ResolvedDateRange,
+  params: { comparePreset?: string; compareFrom?: string; compareTo?: string },
+): ComparisonRange {
+  if (!params.comparePreset || params.comparePreset === "previous") {
+    return resolveComparisonRange(range);
+  }
+  const resolved = resolveDateRange({
+    preset: params.comparePreset,
+    from: params.compareFrom,
+    to: params.compareTo,
+  });
+  return { from: resolved.from, to: resolved.to };
 }

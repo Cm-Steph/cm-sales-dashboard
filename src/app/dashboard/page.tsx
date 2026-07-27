@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { getCachedStages, getCachedUsers, getCachedOpportunities } from "@/lib/dashboardData";
 import { withinRange } from "@/lib/ghl/opportunities";
 import { computeFunnel, emptyFunnelCounts } from "@/lib/funnel/computeFunnel";
-import { resolveDateRange, resolveComparisonRange } from "@/lib/dateRanges";
+import { resolveDateRange, resolveComparisonRangeFromParams } from "@/lib/dateRanges";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { FunnelSummaryCards } from "@/components/dashboard/FunnelSummaryCards";
 import { RepBreakdownTable } from "@/components/dashboard/RepBreakdownTable";
@@ -18,6 +18,9 @@ export default async function DashboardPage({
     owner?: string;
     refresh?: string;
     compare?: string;
+    comparePreset?: string;
+    compareFrom?: string;
+    compareTo?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -42,7 +45,7 @@ export default async function DashboardPage({
   let comparisonCounts;
   let comparisonLabel;
   if (showComparison) {
-    const comparisonRange = resolveComparisonRange(range);
+    const comparisonRange = resolveComparisonRangeFromParams(range, params);
     const comparisonInRange = allOpportunities.filter((o) =>
       withinRange(o, comparisonRange.from, comparisonRange.to),
     );
@@ -52,8 +55,7 @@ export default async function DashboardPage({
         emptyFunnelCounts())
       : comparisonResult.totals;
 
-    const days = Math.round((range.to.getTime() - range.from.getTime()) / (24 * 60 * 60 * 1000));
-    comparisonLabel = `vs previous ${days} day${days === 1 ? "" : "s"} (${comparisonRange.from.toLocaleDateString()} – ${comparisonRange.to.toLocaleDateString()})`;
+    comparisonLabel = `vs ${comparisonRange.from.toLocaleDateString()} – ${comparisonRange.to.toLocaleDateString()}`;
   }
 
   return (

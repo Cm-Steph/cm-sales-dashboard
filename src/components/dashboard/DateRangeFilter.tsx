@@ -2,8 +2,10 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-const inputClasses =
+export const dateFilterInputClasses =
   "rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand-violet dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+
+const inputClasses = dateFilterInputClasses;
 
 /**
  * Date range preset/custom picker + refresh button, shared by the Overview,
@@ -39,6 +41,7 @@ export function DateRangeFilter({ children }: { children?: React.ReactNode }) {
           onChange={(e) => updateParams({ preset: e.target.value, from: null, to: null })}
           className={inputClasses}
         >
+          <option value="last7">Last 7 days</option>
           <option value="last30">Last 30 days</option>
           <option value="last90">Last 90 days</option>
           <option value="lastYear">Last year</option>
