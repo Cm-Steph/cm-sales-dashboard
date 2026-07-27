@@ -15,12 +15,15 @@ export function DashboardFilters({ reps }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const owner = searchParams.get("owner") ?? "all";
+  const compare = searchParams.get("compare") === "1";
 
-  function updateOwner(value: string) {
+  function updateParams(next: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("refresh");
-    if (value === "all") params.delete("owner");
-    else params.set("owner", value);
+    for (const [key, value] of Object.entries(next)) {
+      if (value === null) params.delete(key);
+      else params.set(key, value);
+    }
     router.push(`${pathname}?${params.toString()}`);
   }
 
@@ -28,7 +31,11 @@ export function DashboardFilters({ reps }: Props) {
     <DateRangeFilter>
       <div>
         <label className="mb-1 block text-xs text-zinc-500 dark:text-zinc-400">Rep</label>
-        <select value={owner} onChange={(e) => updateOwner(e.target.value)} className={inputClasses}>
+        <select
+          value={owner}
+          onChange={(e) => updateParams({ owner: e.target.value === "all" ? null : e.target.value })}
+          className={inputClasses}
+        >
           <option value="all">All reps</option>
           {reps.map((rep) => (
             <option key={rep.id} value={rep.id}>
@@ -37,6 +44,16 @@ export function DashboardFilters({ reps }: Props) {
           ))}
         </select>
       </div>
+
+      <label className="flex items-center gap-2 pb-1.5 text-sm text-zinc-700 dark:text-zinc-300">
+        <input
+          type="checkbox"
+          checked={compare}
+          onChange={(e) => updateParams({ compare: e.target.checked ? "1" : null })}
+          className="h-4 w-4 rounded border-zinc-300 text-brand-violet focus:ring-brand-violet dark:border-zinc-700"
+        />
+        Compare to previous period
+      </label>
     </DateRangeFilter>
   );
 }

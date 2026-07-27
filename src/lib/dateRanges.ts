@@ -45,3 +45,20 @@ export function resolveDateRange(params: {
   const from = startOfDay(new Date(now.getTime() - PRESET_DAYS[preset] * 24 * 60 * 60 * 1000));
   return { from, to: endOfDay(now), preset };
 }
+
+export interface ComparisonRange {
+  from: Date;
+  to: Date;
+}
+
+/**
+ * The immediately preceding period of the same length as `range` -- the
+ * standard "vs previous period" comparison (e.g. Last 30 days compares
+ * against the 30 days before that, back to back with no gap).
+ */
+export function resolveComparisonRange(range: ResolvedDateRange): ComparisonRange {
+  const durationMs = range.to.getTime() - range.from.getTime();
+  const to = new Date(range.from.getTime() - 1);
+  const from = new Date(to.getTime() - durationMs);
+  return { from, to };
+}

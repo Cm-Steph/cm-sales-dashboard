@@ -52,6 +52,22 @@ function rate(numerator: number, denominator: number): number | null {
   return denominator > 0 ? numerator / denominator : null;
 }
 
+/** All-zero counts -- useful as a comparison baseline when a rep/segment had no activity at all in the other period. */
+export function emptyFunnelCounts(): FunnelCounts {
+  return {
+    total: 0,
+    qualified: 0,
+    noShow: 0,
+    cancelled: 0,
+    inDeliberation: 0,
+    won: 0,
+    lost: 0,
+    nurture: 0,
+    totalToWonRate: null,
+    qualifiedToWonRate: null,
+  };
+}
+
 function toFunnelCounts(buckets: Record<FunnelBucket, number>, total: number): FunnelCounts {
   const won = buckets.Won;
   // "Qualified" here means opportunities currently sitting at or past initial

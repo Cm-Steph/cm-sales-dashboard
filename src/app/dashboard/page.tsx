@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { getCachedStages, getCachedUsers, getCachedOpportunities } from "@/lib/dashboardData";
 import { withinRange } from "@/lib/ghl/opportunities";
-import { computeFunnel } from "@/lib/funnel/computeFunnel";
-import { resolveDateRange } from "@/lib/dateRanges";
+import { computeFunnel, emptyFunnelCounts } from "@/lib/funnel/computeFunnel";
+import { resolveDateRange, resolveComparisonRange } from "@/lib/dateRanges";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { FunnelSummaryCards } from "@/components/dashboard/FunnelSummaryCards";
 import { RepBreakdownTable } from "@/components/dashboard/RepBreakdownTable";
@@ -17,11 +17,13 @@ export default async function DashboardPage({
     to?: string;
     owner?: string;
     refresh?: string;
+    compare?: string;
   }>;
 }) {
   const params = await searchParams;
   const range = resolveDateRange(params);
   const bypassCache = Boolean(params.refresh);
+  const showComparison = params.compare === "1";
 
   const [stages, users, allOpportunities] = await Promise.all([
     getCachedStages(bypassCache),
@@ -36,6 +38,23 @@ export default async function DashboardPage({
   const selectedRep = selectedOwner
     ? result.byRep.find((r) => r.ownerId === selectedOwner)
     : null;
+
+  let comparisonCounts;
+  let comparisonLabel;
+  if (showComparison) {
+    const comparisonRange = resolveComparisonRange(range);
+    const comparisonInRange = allOpportunities.filter((o) =>
+      withinRange(o, comparisonRange.from, comparisonRange.to),
+    );
+    const comparisonResult = computeFunnel(comparisonInRange, stages, users);
+    comparisonCounts = selectedRep
+      ? (comparisonResult.byRep.find((r) => r.ownerId === selectedRep.ownerId)?.counts ??
+        emptyFunnelCounts())
+      : comparisonResult.totals;
+
+    const days = Math.round((range.to.getTime() - range.from.getTime()) / (24 * 60 * 60 * 1000));
+    comparisonLabel = `vs previous ${days} day${days === 1 ? "" : "s"} (${comparisonRange.from.toLocaleDateString()} – ${comparisonRange.to.toLocaleDateString()})`;
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
@@ -57,6 +76,8 @@ export default async function DashboardPage({
 
       <FunnelSummaryCards
         counts={selectedRep ? selectedRep.counts : result.totals}
+        comparison={comparisonCounts}
+        comparisonLabel={comparisonLabel}
         title={selectedRep ? selectedRep.ownerName : "Team totals"}
       />
 
