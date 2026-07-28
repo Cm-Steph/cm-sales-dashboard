@@ -14,8 +14,6 @@ import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { FunnelSummaryCards, ConversionRateCards } from "@/components/dashboard/FunnelSummaryCards";
 import { RepBreakdownTable, type RepBreakdownRow } from "@/components/dashboard/RepBreakdownTable";
 import { RepBookingsChart, RepRateComparisonChart } from "@/components/dashboard/RepComparisonCharts";
-import { AttendanceSummaryCards } from "@/components/dashboard/AttendanceSummaryCards";
-import { AttendanceCoverageBanner } from "@/components/dashboard/AttendanceCoverageBanner";
 import { UnmappedStagesBanner } from "@/components/dashboard/UnmappedStagesBanner";
 
 export default async function DashboardPage({
@@ -123,28 +121,6 @@ export default async function DashboardPage({
         comparisonLabel={comparisonLabel}
         title={selectedRep ? selectedRep.ownerName : "Team totals"}
       />
-
-      <div>
-        <h2 className="mb-2 flex items-baseline gap-2 font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          Strategy Session attendance
-          <span className="text-xs font-normal normal-case text-zinc-400">
-            from GHL&apos;s calendar, a separate system from the pipeline stage above — SS No-Show /
-            SS Cancelled won&apos;t always match the No Show / Cancelled cards above, since those
-            track opportunity stage (reliably kept up to date) while these track calendar
-            appointment status (see note below)
-          </span>
-        </h2>
-        <div className="flex flex-col gap-4">
-          <AttendanceCoverageBanner
-            unresolvedPastCount={attendanceResult.unresolvedPastCount}
-            resolvedCount={attendanceResult.totals.booked}
-          />
-          <AttendanceSummaryCards
-            counts={selectedRepCombined ? selectedRepCombined.attendance : attendanceResult.totals}
-            title={selectedRep ? selectedRep.ownerName : "Team totals"}
-          />
-        </div>
-      </div>
 
       <ConversionRateCards
         counts={selectedRep ? selectedRep.counts : result.totals}
