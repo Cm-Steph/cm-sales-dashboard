@@ -3,6 +3,7 @@ import type { GhlUser } from "../ghl/users";
 import type { SafeOpportunity } from "../ghl/opportunities";
 import { stageMappingByName, type FunnelBucket } from "./stageMapping";
 import { canonicalOwnerNameOverride, resolveCanonicalOwnerId } from "./ownerAliases";
+import { isTrackedRep } from "./trackedReps";
 
 export interface FunnelCounts {
   total: number;
@@ -115,7 +116,10 @@ function toFunnelCounts(buckets: Record<FunnelBucket, number>, total: number): F
  * Pure aggregation: raw sanitized opportunities in, per-rep + team funnel
  * counts out. No network calls, no dates parsed here — callers are
  * responsible for pre-filtering opportunities to the desired date range
- * (see withinRange in lib/ghl/opportunities.ts).
+ * (see withinRange in lib/ghl/opportunities.ts). Opportunities not owned
+ * by one of TRACKED_REPS (Unassigned, former staff, stray ids) are
+ * excluded entirely -- from team totals as well as the by-rep breakdown --
+ * per Steph 2026-07-29: this dashboard tracks the active sales team only.
  */
 export function computeFunnel(
   opportunities: SafeOpportunity[],
@@ -130,6 +134,9 @@ export function computeFunnel(
   const repTotals = new Map<string, number>();
 
   for (const opp of opportunities) {
+    const ownerId = opp.assignedTo ? resolveCanonicalOwnerId(opp.assignedTo) : "unassigned";
+    if (!isTrackedRep(ownerId)) continue;
+
     const stage = stagesById.get(opp.pipelineStageId);
     const stageName = stage?.name ?? opp.pipelineStageId;
     const mapping = stageMappingByName.get(stageName);
@@ -147,7 +154,6 @@ export function computeFunnel(
     teamBuckets[mapping.bucket]++;
     teamTotal++;
 
-    const ownerId = opp.assignedTo ? resolveCanonicalOwnerId(opp.assignedTo) : "unassigned";
     if (!repBuckets.has(ownerId)) {
       repBuckets.set(ownerId, { ...EMPTY_BUCKET_COUNTS });
       repNames.set(

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { computeFunnel } from "./computeFunnel";
+import { TRACKED_REPS } from "./trackedReps";
 import type { SafeOpportunity } from "../ghl/opportunities";
 import type { GhlStage } from "../ghl/pipelines";
 import type { GhlUser } from "../ghl/users";
@@ -16,16 +17,15 @@ const STAGES: [string, GhlStage][] = [
 ];
 const stagesById = new Map(STAGES);
 
-const users: Map<string, GhlUser> = new Map([
-  ["jack", { id: "jack", name: "Jack O'Brien" }],
-]);
+const jackId = TRACKED_REPS[0].id;
+const users: Map<string, GhlUser> = new Map([[jackId, { id: jackId, name: "Jack O'Brien" }]]);
 
 function opp(overrides: Partial<SafeOpportunity>): SafeOpportunity {
   return {
     id: Math.random().toString(36),
     contactRef: "hash",
     pipelineStageId: "s-qualified",
-    assignedTo: "jack",
+    assignedTo: jackId,
     status: "open",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
@@ -65,23 +65,26 @@ test("buckets opportunities by mapped stage and computes rates", () => {
   assert.equal(result.totals.lostRate, 1 / 6);
 });
 
-test("groups by rep, including an explicit unassigned bucket", () => {
+test("groups by rep, excluding untracked reps entirely (including Unassigned)", () => {
   const result = computeFunnel(
     [
-      opp({ assignedTo: "jack", pipelineStageId: "s-qualified" }),
+      opp({ assignedTo: jackId, pipelineStageId: "s-qualified" }),
       opp({ assignedTo: null, pipelineStageId: "s-qualified" }),
+      opp({ assignedTo: "some-former-staff-id", pipelineStageId: "s-qualified" }),
     ],
     stagesById,
     users,
   );
 
-  assert.equal(result.byRep.length, 2);
-  const jack = result.byRep.find((r) => r.ownerId === "jack");
-  const unassigned = result.byRep.find((r) => r.ownerId === "unassigned");
+  assert.equal(result.byRep.length, 1, "only the tracked rep gets a row");
+  const jack = result.byRep.find((r) => r.ownerId === jackId);
   assert.equal(jack?.ownerName, "Jack O'Brien");
   assert.equal(jack?.counts.total, 1);
-  assert.equal(unassigned?.ownerName, "Unassigned");
-  assert.equal(unassigned?.counts.total, 1);
+  assert.equal(
+    result.totals.total,
+    1,
+    "team totals exclude Unassigned/untracked opportunities too",
+  );
 });
 
 test("stages missing from stageMapping.ts surface as unmapped instead of vanishing", () => {

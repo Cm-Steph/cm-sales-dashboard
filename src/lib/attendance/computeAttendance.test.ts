@@ -1,15 +1,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { computeAttendance } from "./computeAttendance";
+import { TRACKED_REPS } from "../funnel/trackedReps";
 import type { SafeAppointment } from "../ghl/appointments";
 import type { GhlUser } from "../ghl/users";
 
-const users: Map<string, GhlUser> = new Map([["jack", { id: "jack", name: "Jack O'Brien" }]]);
+const jackId = TRACKED_REPS[0].id;
+const users: Map<string, GhlUser> = new Map([[jackId, { id: jackId, name: "Jack O'Brien" }]]);
 
 function appt(overrides: Partial<SafeAppointment>): SafeAppointment {
   return {
     contactRef: "hash",
-    assignedTo: "jack",
+    assignedTo: jackId,
     status: "showed",
     startTime: "2026-01-01T00:00:00.000Z",
     ...overrides,
@@ -65,19 +67,21 @@ test("flags 'confirmed' appointments whose scheduled time has already passed as 
   assert.equal(result.totals.booked, 1, "unresolved appointments aren't counted as booked");
 });
 
-test("groups by rep, including an explicit unassigned bucket", () => {
+test("groups by rep, excluding untracked reps entirely (including Unassigned)", () => {
   const result = computeAttendance(
-    [appt({ assignedTo: "jack", status: "showed" }), appt({ assignedTo: null, status: "noshow" })],
+    [
+      appt({ assignedTo: jackId, status: "showed" }),
+      appt({ assignedTo: null, status: "noshow" }),
+      appt({ assignedTo: "some-former-staff-id", status: "noshow" }),
+    ],
     users,
   );
 
-  assert.equal(result.byRep.length, 2);
-  const jack = result.byRep.find((r) => r.ownerId === "jack");
-  const unassigned = result.byRep.find((r) => r.ownerId === "unassigned");
+  assert.equal(result.byRep.length, 1, "only the tracked rep gets a row");
+  const jack = result.byRep.find((r) => r.ownerId === jackId);
   assert.equal(jack?.ownerName, "Jack O'Brien");
   assert.equal(jack?.counts.attended, 1);
-  assert.equal(unassigned?.ownerName, "Unassigned");
-  assert.equal(unassigned?.counts.noShow, 1);
+  assert.equal(result.totals.noShow, 0, "Unassigned/untracked no-shows aren't counted at all");
 });
 
 test("handles an empty appointment list without dividing by zero", () => {

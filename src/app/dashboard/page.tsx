@@ -12,9 +12,9 @@ import { computeAttendance, emptyAttendanceCounts } from "@/lib/attendance/compu
 import { resolveDateRange, resolveComparisonRangeFromParams } from "@/lib/dateRanges";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { FunnelSummaryCards, ConversionRateCards } from "@/components/dashboard/FunnelSummaryCards";
-import { RepBreakdownTable } from "@/components/dashboard/RepBreakdownTable";
+import { RepBreakdownTable, type RepBreakdownRow } from "@/components/dashboard/RepBreakdownTable";
+import { RepBookingsChart, RepRateComparisonChart } from "@/components/dashboard/RepComparisonCharts";
 import { AttendanceSummaryCards } from "@/components/dashboard/AttendanceSummaryCards";
-import { AttendanceByRepTable } from "@/components/dashboard/AttendanceByRepTable";
 import { AttendanceCoverageBanner } from "@/components/dashboard/AttendanceCoverageBanner";
 import { UnmappedStagesBanner } from "@/components/dashboard/UnmappedStagesBanner";
 
@@ -53,12 +53,34 @@ export default async function DashboardPage({
   );
   const attendanceResult = computeAttendance(appointmentsInRange, users);
 
+  // Merge the pipeline-stage funnel and the calendar-based attendance data
+  // into one row per rep -- both are already scoped to the same tracked
+  // reps and the same date range, but a rep with appointments and no
+  // in-range opportunities (or vice versa) still needs a row, so this
+  // unions both id sets rather than assuming they match.
+  const attendanceByOwner = new Map(attendanceResult.byRep.map((r) => [r.ownerId, r]));
+  const combinedReps: RepBreakdownRow[] = result.byRep.map((r) => ({
+    ...r,
+    attendance: attendanceByOwner.get(r.ownerId)?.counts ?? emptyAttendanceCounts(),
+  }));
+  for (const [ownerId, attRep] of attendanceByOwner) {
+    if (!combinedReps.some((r) => r.ownerId === ownerId)) {
+      combinedReps.push({
+        ownerId,
+        ownerName: attRep.ownerName,
+        counts: emptyFunnelCounts(),
+        attendance: attRep.counts,
+      });
+    }
+  }
+  combinedReps.sort((a, b) => b.counts.total - a.counts.total);
+
   const selectedOwner = params.owner && params.owner !== "all" ? params.owner : null;
   const selectedRep = selectedOwner
     ? result.byRep.find((r) => r.ownerId === selectedOwner)
     : null;
-  const selectedRepAttendance = selectedOwner
-    ? attendanceResult.byRep.find((r) => r.ownerId === selectedOwner)
+  const selectedRepCombined = selectedOwner
+    ? combinedReps.find((r) => r.ownerId === selectedOwner)
     : null;
 
   let comparisonCounts;
@@ -109,18 +131,31 @@ export default async function DashboardPage({
         title="Conversion & drop-off rates"
       />
 
+      {!selectedOwner && (
+        <div>
+          <h2 className="mb-2 font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            Rep comparison
+          </h2>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <RepBookingsChart reps={combinedReps} />
+            <RepRateComparisonChart reps={combinedReps} />
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="mb-2 font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
           By rep
         </h2>
-        <RepBreakdownTable reps={selectedRep ? [selectedRep] : result.byRep} />
+        <RepBreakdownTable reps={selectedRepCombined ? [selectedRepCombined] : combinedReps} />
       </div>
 
       <div>
         <h2 className="mb-2 flex items-baseline gap-2 font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
           Strategy Session attendance
           <span className="text-xs font-normal normal-case text-zinc-400">
-            upstream of the pipeline above — booked from GHL calendars, not opportunity stage
+            upstream of the pipeline above — booked from GHL calendars, not opportunity stage. Per-rep
+            breakdown is in the By rep table above.
           </span>
         </h2>
         <div className="flex flex-col gap-4">
@@ -129,15 +164,8 @@ export default async function DashboardPage({
             resolvedCount={attendanceResult.totals.booked}
           />
           <AttendanceSummaryCards
-            counts={
-              selectedOwner
-                ? (selectedRepAttendance?.counts ?? emptyAttendanceCounts())
-                : attendanceResult.totals
-            }
+            counts={selectedRepCombined ? selectedRepCombined.attendance : attendanceResult.totals}
             title={selectedRep ? selectedRep.ownerName : "Team totals"}
-          />
-          <AttendanceByRepTable
-            reps={selectedRepAttendance ? [selectedRepAttendance] : attendanceResult.byRep}
           />
         </div>
       </div>

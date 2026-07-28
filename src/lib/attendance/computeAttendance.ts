@@ -1,6 +1,7 @@
 import type { SafeAppointment } from "../ghl/appointments";
 import type { GhlUser } from "../ghl/users";
 import { canonicalOwnerNameOverride, resolveCanonicalOwnerId } from "../funnel/ownerAliases";
+import { isTrackedRep } from "../funnel/trackedReps";
 
 export interface AttendanceCounts {
   /** showed + noShow + cancelled -- bookings with a resolved outcome. Excludes still-upcoming "confirmed" sessions, since those haven't happened yet either way. */
@@ -68,6 +69,9 @@ export function computeAttendance(
   const repNames = new Map<string, string>();
 
   for (const appt of appointments) {
+    const ownerId = appt.assignedTo ? resolveCanonicalOwnerId(appt.assignedTo) : "unassigned";
+    if (!isTrackedRep(ownerId)) continue;
+
     if (appt.status !== "showed" && appt.status !== "noshow" && appt.status !== "cancelled") {
       if (appt.status === "confirmed" && new Date(appt.startTime).getTime() < now) {
         unresolvedPastCount++;
@@ -79,7 +83,6 @@ export function computeAttendance(
     else if (appt.status === "noshow") teamNoShow++;
     else teamCancelled++;
 
-    const ownerId = appt.assignedTo ? resolveCanonicalOwnerId(appt.assignedTo) : "unassigned";
     if (!repNames.has(ownerId)) {
       repNames.set(
         ownerId,

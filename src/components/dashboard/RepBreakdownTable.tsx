@@ -1,4 +1,5 @@
 import type { RepFunnelMetrics } from "@/lib/funnel/computeFunnel";
+import type { AttendanceCounts } from "@/lib/attendance/computeAttendance";
 import { InfoTooltip } from "./InfoTooltip";
 
 function formatRate(rate: number | null): string {
@@ -22,6 +23,11 @@ const COLUMN_INFO: Record<string, string> = {
   "In Deliberation Rate": "In Deliberation ÷ Total for this rep.",
   "Lost Rate": "Lost ÷ Total for this rep.",
   "Qual. → Won Rate": "Won ÷ Qualified for this rep — isolates closing performance from booking volume.",
+  "SS Booked": "Strategy Session appointments booked to this rep with a resolved outcome (attended, no-show, or cancelled) in this range.",
+  "SS Attended": "Of those Strategy Sessions, how many the contact actually showed up for.",
+  "SS No-Show": "Strategy Session booked, but the contact never showed.",
+  "SS Cancelled": "Strategy Session booked, then cancelled outright.",
+  "SS Show Rate": "SS Attended ÷ SS Booked for this rep — separate from the pipeline-stage 'No Show' column, this comes straight from GHL's calendar appointment status.",
 };
 
 function Th({ label }: { label: string }) {
@@ -35,14 +41,18 @@ function Th({ label }: { label: string }) {
   );
 }
 
-export function RepBreakdownTable({ reps }: { reps: RepFunnelMetrics[] }) {
+export interface RepBreakdownRow extends RepFunnelMetrics {
+  attendance: AttendanceCounts;
+}
+
+export function RepBreakdownTable({ reps }: { reps: RepBreakdownRow[] }) {
   if (reps.length === 0) {
     return <p className="text-sm text-zinc-500 dark:text-zinc-400">No opportunities in this range.</p>;
   }
 
   return (
     <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-      <table className="w-full min-w-[1180px] text-sm">
+      <table className="w-full min-w-[1560px] text-sm">
         <thead className="bg-zinc-50 text-left font-heading text-xs uppercase tracking-wide text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
           <tr>
             <th className="px-3 py-2 font-medium">Rep</th>
@@ -59,6 +69,11 @@ export function RepBreakdownTable({ reps }: { reps: RepFunnelMetrics[] }) {
             <Th label="In Deliberation Rate" />
             <Th label="Lost Rate" />
             <Th label="Qual. → Won Rate" />
+            <Th label="SS Booked" />
+            <Th label="SS Attended" />
+            <Th label="SS No-Show" />
+            <Th label="SS Cancelled" />
+            <Th label="SS Show Rate" />
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -80,6 +95,11 @@ export function RepBreakdownTable({ reps }: { reps: RepFunnelMetrics[] }) {
               <td className={td}>{formatRate(rep.counts.inDeliberationRate)}</td>
               <td className={td}>{formatRate(rep.counts.lostRate)}</td>
               <td className={td}>{formatRate(rep.counts.qualifiedToWonRate)}</td>
+              <td className={td}>{rep.attendance.booked}</td>
+              <td className={td}>{rep.attendance.attended}</td>
+              <td className={td}>{rep.attendance.noShow}</td>
+              <td className={td}>{rep.attendance.cancelled}</td>
+              <td className={td}>{formatRate(rep.attendance.showRate)}</td>
             </tr>
           ))}
         </tbody>

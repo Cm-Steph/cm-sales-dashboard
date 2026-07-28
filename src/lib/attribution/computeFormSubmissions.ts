@@ -15,6 +15,8 @@ const EXCLUDED_FORM_NAME_SUBSTRINGS = [
   "practice leaders program enrolment",
   "member gift request",
   "membership change/update request",
+  "refund request",
+  "member general support enquiry",
 ];
 
 function isExcludedForm(formName: string): boolean {

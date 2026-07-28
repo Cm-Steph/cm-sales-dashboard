@@ -77,6 +77,8 @@ test("excludes member-servicing / internal-ops forms regardless of naming varian
       submission({ formName: "Member Gift Request" }),
       submission({ formName: "[INTERNAL] Membership Change/Update Request " }),
       submission({ formName: "Membership Change/Update Request" }),
+      submission({ formName: "[Internal] Refund Request Form" }),
+      submission({ formName: "Member General Support Enquiry" }),
       submission({ formName: "New | Systems Blueprint | 2025 | PDF File" }),
     ],
     [],
