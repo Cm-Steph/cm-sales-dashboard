@@ -4,6 +4,7 @@ import { withinRange } from "@/lib/ghl/opportunities";
 import {
   computeSourceAttribution,
   computeLandingPageAttribution,
+  type SourceBreakdown,
 } from "@/lib/attribution/computeAttribution";
 import { computeFormSubmissionAttribution } from "@/lib/attribution/computeFormSubmissions";
 import { resolveDateRange } from "@/lib/dateRanges";
@@ -11,6 +12,14 @@ import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter";
 import { SourceBreakdownTable } from "@/components/dashboard/SourceBreakdownTable";
 import { FormSubmissionTable } from "@/components/dashboard/FormSubmissionTable";
 import { InfoTooltip } from "@/components/dashboard/InfoTooltip";
+import { DataQualityBanner } from "@/components/dashboard/DataQualityBanner";
+
+function unknownShare(rows: SourceBreakdown[]): { unknown: number; total: number; pct: number } | null {
+  const unknown = rows.find((r) => r.source === "Unknown")?.total ?? 0;
+  if (unknown === 0) return null;
+  const total = rows.reduce((sum, r) => sum + r.total, 0);
+  return { unknown, total, pct: Math.round((unknown / total) * 100) };
+}
 
 export default async function JourneyPage({
   searchParams,
@@ -31,6 +40,11 @@ export default async function JourneyPage({
   const firstTouch = computeSourceAttribution(inRange, stages, "first");
   const lastTouch = computeSourceAttribution(inRange, stages, "last");
   const landingPages = computeLandingPageAttribution(inRange, stages);
+
+  const landingPageGap = unknownShare(landingPages);
+  const firstTouchGap = unknownShare(firstTouch);
+  const lastTouchGap = unknownShare(lastTouch);
+  const rangeLabel = `${range.from.toLocaleDateString()} – ${range.to.toLocaleDateString()}`;
 
   const submissionsInRange = allFormSubmissions.filter((s) => {
     const submittedAt = new Date(s.submittedAt).getTime();
@@ -75,6 +89,15 @@ export default async function JourneyPage({
           By landing page — which specific offer or lead magnet drove the booking
           <InfoTooltip text="The path of the page a contact first landed on before ever booking (e.g. a specific lead magnet or webinar page), not just the broad channel. Sourced from GHL's own first-touch tracking." />
         </h2>
+        {landingPageGap && (
+          <div className="mb-2">
+            <DataQualityBanner>
+              {landingPageGap.unknown} of {landingPageGap.total} bookings in {rangeLabel} (
+              {landingPageGap.pct}%) have no landing page recorded in GHL — most commonly a contact
+              created directly in the CRM UI rather than through a tracked web page.
+            </DataQualityBanner>
+          </div>
+        )}
         <SourceBreakdownTable
           rows={landingPages}
           columnLabel="Page"
@@ -88,6 +111,14 @@ export default async function JourneyPage({
           By first-touch source — where bookings originally came from
           <InfoTooltip text="The channel/campaign a contact was attributed to the very first time they showed up in GHL, before ever booking. Sourced from GHL's own UTM/session tracking." />
         </h2>
+        {firstTouchGap && (
+          <div className="mb-2">
+            <DataQualityBanner>
+              {firstTouchGap.unknown} of {firstTouchGap.total} bookings in {rangeLabel} (
+              {firstTouchGap.pct}%) have no first-touch source recorded in GHL.
+            </DataQualityBanner>
+          </div>
+        )}
         <SourceBreakdownTable rows={firstTouch} />
       </div>
 
@@ -96,6 +127,15 @@ export default async function JourneyPage({
           By last-touch source — what drove the actual booking
           <InfoTooltip text="The channel/campaign active at the moment the contact actually booked, which may differ from their first-touch source if they returned through a different channel." />
         </h2>
+        {lastTouchGap && (
+          <div className="mb-2">
+            <DataQualityBanner>
+              {lastTouchGap.unknown} of {lastTouchGap.total} bookings in {rangeLabel} (
+              {lastTouchGap.pct}%) have no last-touch source recorded in GHL — most commonly a
+              contact created directly in the CRM UI rather than through a tracked channel.
+            </DataQualityBanner>
+          </div>
+        )}
         <SourceBreakdownTable rows={lastTouch} />
       </div>
     </div>

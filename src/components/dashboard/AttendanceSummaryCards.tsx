@@ -43,25 +43,29 @@ export function AttendanceSummaryCards({
       </h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Card
-          label="Booked"
+          label="SS Booked"
           value={counts.booked}
-          info="Strategy Session appointments in this date range with a resolved outcome (attended, no-show, or cancelled) -- still-upcoming confirmed bookings aren't counted yet since they haven't happened."
+          info="Strategy Session appointments in this date range with a resolved outcome (attended, no-show, or cancelled), per GHL's calendar -- still-upcoming confirmed bookings aren't counted yet since they haven't happened."
         />
         <Card
-          label="Attended"
+          label="SS Attended"
           value={counts.attended}
-          info="Strategy Sessions the contact actually showed up for, per GHL's own appointment status."
+          info="Strategy Sessions the contact actually showed up for, per GHL's own calendar appointment status."
         />
         <Card
-          label="No-Show"
+          label="SS No-Show"
           value={counts.noShow}
-          info="Booked, but the contact never showed."
+          info="Booked, but the contact never showed, per GHL's calendar appointment status -- a separate system from the pipeline stage 'No Show' card above, and won't always match it (see the note above)."
         />
-        <Card label="Cancelled" value={counts.cancelled} info="Booked, then cancelled outright." />
         <Card
-          label="Show Rate"
+          label="SS Cancelled"
+          value={counts.cancelled}
+          info="Booked, then cancelled outright, per GHL's calendar appointment status -- a separate system from the pipeline stage 'Cancelled' card above."
+        />
+        <Card
+          label="SS Show Rate"
           value={formatRate(counts.showRate)}
-          info="Attended ÷ Booked. This is upstream of the pipeline funnel -- a low show rate is a booking/reminder/qualification problem, not a sales-closing problem."
+          info="SS Attended ÷ SS Booked. This is upstream of the pipeline funnel -- a low show rate is a booking/reminder/qualification problem, not a sales-closing problem."
           align="end"
         />
       </div>

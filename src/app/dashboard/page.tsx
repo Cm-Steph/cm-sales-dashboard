@@ -124,6 +124,28 @@ export default async function DashboardPage({
         title={selectedRep ? selectedRep.ownerName : "Team totals"}
       />
 
+      <div>
+        <h2 className="mb-2 flex items-baseline gap-2 font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
+          Strategy Session attendance
+          <span className="text-xs font-normal normal-case text-zinc-400">
+            from GHL&apos;s calendar, a separate system from the pipeline stage above — SS No-Show /
+            SS Cancelled won&apos;t always match the No Show / Cancelled cards above, since those
+            track opportunity stage (reliably kept up to date) while these track calendar
+            appointment status (see note below)
+          </span>
+        </h2>
+        <div className="flex flex-col gap-4">
+          <AttendanceCoverageBanner
+            unresolvedPastCount={attendanceResult.unresolvedPastCount}
+            resolvedCount={attendanceResult.totals.booked}
+          />
+          <AttendanceSummaryCards
+            counts={selectedRepCombined ? selectedRepCombined.attendance : attendanceResult.totals}
+            title={selectedRep ? selectedRep.ownerName : "Team totals"}
+          />
+        </div>
+      </div>
+
       <ConversionRateCards
         counts={selectedRep ? selectedRep.counts : result.totals}
         comparison={comparisonCounts}
@@ -148,26 +170,6 @@ export default async function DashboardPage({
           By rep
         </h2>
         <RepBreakdownTable reps={selectedRepCombined ? [selectedRepCombined] : combinedReps} />
-      </div>
-
-      <div>
-        <h2 className="mb-2 flex items-baseline gap-2 font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          Strategy Session attendance
-          <span className="text-xs font-normal normal-case text-zinc-400">
-            upstream of the pipeline above — booked from GHL calendars, not opportunity stage. Per-rep
-            breakdown is in the By rep table above.
-          </span>
-        </h2>
-        <div className="flex flex-col gap-4">
-          <AttendanceCoverageBanner
-            unresolvedPastCount={attendanceResult.unresolvedPastCount}
-            resolvedCount={attendanceResult.totals.booked}
-          />
-          <AttendanceSummaryCards
-            counts={selectedRepCombined ? selectedRepCombined.attendance : attendanceResult.totals}
-            title={selectedRep ? selectedRep.ownerName : "Team totals"}
-          />
-        </div>
       </div>
     </div>
   );
