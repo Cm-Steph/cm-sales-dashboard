@@ -77,14 +77,10 @@ const TOGGLED_COLUMNS: ToggledColumn[] = [
 // in "%" mode, alongside the toggled columns above.
 const QUAL_WON_INFO = "Won ÷ Qualified for this rep — isolates closing performance from booking volume.";
 
-// SS Cancelled has no rate worth showing on its own, and SS Show Rate has
-// no meaningful raw-count twin now that SS Booked/Attended are gone -- each
-// only appears in the one mode it makes sense in, rather than being forced
-// into a number/percent pair with each other.
+// SS Cancelled has no rate worth showing on its own, and is only shown in
+// Numbers mode -- no % counterpart.
 const SS_CANCELLED_INFO =
   "Strategy Session booked, then cancelled outright, per GHL's calendar appointment status -- a separate system from the pipeline-stage 'Cancelled' column.";
-const SS_SHOW_RATE_INFO =
-  "SS Attended ÷ SS Booked, per GHL's calendar appointment status -- a separate system from the pipeline-stage rate columns.";
 
 function Th({
   label,
@@ -157,10 +153,7 @@ export function RepBreakdownTable({ reps }: { reps: RepBreakdownRow[] }) {
               {mode === "numbers" ? (
                 <Th label="SS Cancelled" info={SS_CANCELLED_INFO} />
               ) : (
-                <>
-                  <Th label="Qual. → Won Rate" info={QUAL_WON_INFO} />
-                  <Th label="SS Show Rate" info={SS_SHOW_RATE_INFO} />
-                </>
+                <Th label="Qual. → Won Rate" info={QUAL_WON_INFO} />
               )}
             </tr>
           </thead>
@@ -180,10 +173,7 @@ export function RepBreakdownTable({ reps }: { reps: RepBreakdownRow[] }) {
                 {mode === "numbers" ? (
                   <td className={td}>{rep.attendance.cancelled}</td>
                 ) : (
-                  <>
-                    <td className={td}>{formatRate(rep.counts.qualifiedToWonRate)}</td>
-                    <td className={td}>{formatRate(rep.attendance.showRate)}</td>
-                  </>
+                  <td className={td}>{formatRate(rep.counts.qualifiedToWonRate)}</td>
                 )}
               </tr>
             ))}
