@@ -56,6 +56,56 @@ test("joins submissions to opportunity outcomes purely via contactRef", () => {
   assert.equal(row?.conversionRate, 1 / 3);
 });
 
+test("does not credit a form with an unrelated opportunity that pre-dates the submission", () => {
+  const result = computeFormSubmissionAttribution(
+    [
+      submission({
+        formName: "Newsletter Subscription",
+        contactRef: "existing-member",
+        submittedAt: "2026-06-01T00:00:00.000Z",
+      }),
+    ],
+    [
+      // This opportunity existed a year before the submission -- an
+      // existing member subscribing to a newsletter didn't cause it.
+      opp({
+        contactRef: "existing-member",
+        pipelineStageId: "s-won",
+        createdAt: "2025-06-01T00:00:00.000Z",
+      }),
+    ],
+    stagesById,
+  );
+
+  const row = result.find((r) => r.formName === "Newsletter Subscription");
+  assert.equal(row?.becameOpportunity, 0, "pre-existing opportunity isn't credited to this form");
+  assert.equal(row?.won, 0);
+});
+
+test("credits a form when the resulting opportunity is created after the submission", () => {
+  const result = computeFormSubmissionAttribution(
+    [
+      submission({
+        formName: "New | Systems Blueprint",
+        contactRef: "new-lead",
+        submittedAt: "2026-06-01T00:00:00.000Z",
+      }),
+    ],
+    [
+      opp({
+        contactRef: "new-lead",
+        pipelineStageId: "s-won",
+        createdAt: "2026-06-15T00:00:00.000Z",
+      }),
+    ],
+    stagesById,
+  );
+
+  const row = result.find((r) => r.formName === "New | Systems Blueprint");
+  assert.equal(row?.becameOpportunity, 1);
+  assert.equal(row?.won, 1);
+});
+
 test("a form with zero conversions still reports a real 0, not null", () => {
   const result = computeFormSubmissionAttribution(
     [submission({ formName: "Internal Admin Form", contactRef: "some-member" })],

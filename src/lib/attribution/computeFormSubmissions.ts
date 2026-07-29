@@ -27,32 +27,40 @@ function isExcludedForm(formName: string): boolean {
 export interface FormSubmissionBreakdown {
   formName: string;
   submissions: number;
-  /** Of those who submitted, how many have any opportunity at all in "03. Sales Pipeline". */
+  /** Of those who submitted, how many have an opportunity created on or after that submission -- i.e. plausibly resulting from it, not some unrelated pre-existing pipeline record. */
   becameOpportunity: number;
   won: number;
   /** Won / submissions. */
   conversionRate: number | null;
 }
 
+function isWonBucket(opp: SafeOpportunity, stagesById: Map<string, GhlStage>): boolean {
+  const stageName = stagesById.get(opp.pipelineStageId)?.name;
+  const bucket = stageName ? stageMappingByName.get(stageName)?.bucket : undefined;
+  return bucket === "Won";
+}
+
 /**
- * Groups form submissions by form name, and joins each to whether that
- * contact ever became a pipeline opportunity / won -- purely via the
- * hashed contactRef, since both sides were hashed the same way at fetch
- * time and the raw contactId never needs to be compared directly.
+ * Groups form submissions by form name, and joins each to the opportunities
+ * that plausibly resulted from it -- purely via the hashed contactRef
+ * (both sides hashed the same way at fetch time, no raw contactId needed),
+ * AND requiring the opportunity's createdAt to be on or after the
+ * submission's submittedAt. Without that ordering check, a contact with
+ * any unrelated pre-existing opportunity (e.g. an existing member who
+ * later fills out an admin form) would wrongly count as "became an
+ * opportunity from" that form -- an opportunity can't be caused by a form
+ * submitted after it already existed.
  */
 export function computeFormSubmissionAttribution(
   submissions: SafeFormSubmission[],
   opportunities: SafeOpportunity[],
   stagesById: Map<string, GhlStage>,
 ): FormSubmissionBreakdown[] {
-  const contactRefsWithOpportunity = new Set<string>();
-  const contactRefsWon = new Set<string>();
-
+  const opportunitiesByContact = new Map<string, SafeOpportunity[]>();
   for (const opp of opportunities) {
-    contactRefsWithOpportunity.add(opp.contactRef);
-    const stageName = stagesById.get(opp.pipelineStageId)?.name;
-    const bucket = stageName ? stageMappingByName.get(stageName)?.bucket : undefined;
-    if (bucket === "Won") contactRefsWon.add(opp.contactRef);
+    const existing = opportunitiesByContact.get(opp.contactRef);
+    if (existing) existing.push(opp);
+    else opportunitiesByContact.set(opp.contactRef, [opp]);
   }
 
   const totals = new Map<string, number>();
@@ -63,10 +71,16 @@ export function computeFormSubmissionAttribution(
     if (isExcludedForm(submission.formName)) continue;
     const key = submission.formName;
     totals.set(key, (totals.get(key) ?? 0) + 1);
-    if (contactRefsWithOpportunity.has(submission.contactRef)) {
+
+    const submittedAtMs = new Date(submission.submittedAt).getTime();
+    const resultingOpportunities = (opportunitiesByContact.get(submission.contactRef) ?? []).filter(
+      (opp) => new Date(opp.createdAt).getTime() >= submittedAtMs,
+    );
+
+    if (resultingOpportunities.length > 0) {
       becameOpportunity.set(key, (becameOpportunity.get(key) ?? 0) + 1);
     }
-    if (contactRefsWon.has(submission.contactRef)) {
+    if (resultingOpportunities.some((opp) => isWonBucket(opp, stagesById))) {
       won.set(key, (won.get(key) ?? 0) + 1);
     }
   }

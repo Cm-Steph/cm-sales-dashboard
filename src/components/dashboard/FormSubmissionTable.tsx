@@ -42,7 +42,7 @@ export function FormSubmissionTable({ rows }: { rows: FormSubmissionBreakdown[] 
               <span className="inline-flex items-center justify-end">
                 Became Opportunity
                 <InfoTooltip
-                  text="Of those submitters, how many have any opportunity at all in '03. Sales Pipeline' -- confirms this is a real lead-gen form, not just an internal/admin one."
+                  text="Of those submitters, how many got an opportunity created in '03. Sales Pipeline' on or after their submission -- i.e. plausibly caused by it, not an unrelated pre-existing opportunity. Confirms this is a real lead-gen form, not an internal/admin one."
                   align="end"
                   placement="below"
                 />
@@ -52,7 +52,7 @@ export function FormSubmissionTable({ rows }: { rows: FormSubmissionBreakdown[] 
               <span className="inline-flex items-center justify-end">
                 Won
                 <InfoTooltip
-                  text="Of those submitters, how many are currently in a 'Closed - WON' stage."
+                  text="Of those submitters, how many have a resulting opportunity (created on or after their submission) currently in a 'Closed - WON' stage."
                   align="end"
                   placement="below"
                 />

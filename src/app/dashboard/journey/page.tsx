@@ -52,7 +52,9 @@ export default async function JourneyPage({
   });
   // Joined against the FULL opportunity history, not just inRange -- a form
   // submitted in this window may only convert to a booking/win later, and
-  // we still want to credit that when it happens.
+  // we still want to credit that when it happens. computeFormSubmissionAttribution
+  // still requires the opportunity's createdAt to be on/after the submission,
+  // so an unrelated pre-existing opportunity never gets wrongly credited.
   const formSubmissions = computeFormSubmissionAttribution(
     submissionsInRange,
     allOpportunities,
@@ -79,7 +81,7 @@ export default async function JourneyPage({
       <div>
         <h2 className="mb-2 flex items-center font-heading text-sm font-medium text-zinc-500 dark:text-zinc-400">
           By form submitted — which specific form drives real pipeline activity
-          <InfoTooltip text="Every GHL form submission in this range, joined to whether that same (de-identified) contact ever became a pipeline opportunity or won. Low 'Became Opportunity' numbers usually mean an internal/admin form rather than a lead-gen one." />
+          <InfoTooltip text="Every GHL form submission in this range, joined to whether that (de-identified) contact got a pipeline opportunity created on or after that submission -- i.e. plausibly resulting from it, not some unrelated pre-existing record. Low 'Became Opportunity' numbers usually mean an internal/admin form (billing changes, refund requests -- filled out by people who are already members) rather than a lead-gen one (a new lead magnet or workshop signup meant to bring in new prospects)." />
         </h2>
         <FormSubmissionTable rows={formSubmissions} />
       </div>
